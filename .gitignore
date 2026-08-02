@@ -1,0 +1,27 @@
+# General
+.DS_Store
+.env
+.env.local
+node_modules/
+.vscode/
+
+# Flutter/Dart
+app/.dart_tool/
+app/.packages
+app/.pub-cache/
+app/.pub/
+app/build/
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework/
+app/ios/Flutter/Flutter.podspec
+app/android/app/src/debug/
+app/android/app/src/profile/
+app/android/local.properties
+app/android/.gradle/
+*.iml
+*.lock
+
+# Vercel / Neon
+.vercel/
+.neon/

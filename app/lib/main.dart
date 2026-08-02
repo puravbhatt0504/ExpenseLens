@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import 'screens/dashboard_screen.dart';
+import 'screens/add_transaction_screen.dart';
+import 'screens/transaction_list_screen.dart';
+import 'screens/screenshot_upload_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/login_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+  
+  const storage = FlutterSecureStorage();
+  final hasAuthToken = await storage.containsKey(key: 'auth_token');
+
+  runApp(ProviderScope(
+    child: ExpenseLensApp(
+      hasSeenOnboarding: hasSeenOnboarding,
+      hasAuthToken: hasAuthToken,
+    ),
+  ));
+}
+
+class ExpenseLensApp extends StatelessWidget {
+  final bool hasSeenOnboarding;
+  final bool hasAuthToken;
+
+  const ExpenseLensApp({
+    super.key, 
+    required this.hasSeenOnboarding,
+    required this.hasAuthToken,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = GoogleFonts.plusJakartaSansTextTheme();
+
+    Widget initialScreen;
+    if (!hasSeenOnboarding) {
+      initialScreen = const OnboardingScreen();
+    } else if (!hasAuthToken) {
+      initialScreen = const LoginScreen();
+    } else {
+      initialScreen = const AppShell();
+    }
+
+    return MaterialApp(
+      title: 'ExpenseLens',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xFF6C5CE7), // Premium purple
+        textTheme: textTheme,
+        useMaterial3: true,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        colorSchemeSeed: const Color(0xFF6C5CE7),
+        textTheme: textTheme.apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+      ),
+      themeMode: ThemeMode.system,
+      home: initialScreen,
+      routes: {
+        '/add-transaction': (context) => const AddTransactionScreen(),
+        '/screenshot-upload': (context) => const ScreenshotUploadScreen(),
+      },
+    );
+  }
+}
+
+/// App shell with bottom navigation between Dashboard and Transaction List.
+class AppShell extends StatefulWidget {
+  const AppShell({super.key});
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = const [
+    DashboardScreen(),
+    TransactionListScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_currentIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() => _currentIndex = index);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Transactions',
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddOptions(context);
+        },
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Add Manually'),
+              subtitle: const Text('Enter transaction details by hand'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/add-transaction');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Upload Screenshot'),
+              subtitle: const Text('Parse a UPI/PhonePe screenshot'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/screenshot-upload');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
