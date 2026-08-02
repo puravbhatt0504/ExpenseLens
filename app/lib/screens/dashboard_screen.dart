@@ -5,6 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
+import '../theme/app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 /// Dashboard screen — displays monthly spend total and category breakdown chart.
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -110,14 +112,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           padding: const EdgeInsets.all(32),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [Color(0xFF6C5CE7), Color(0xFFA29BFE)],
+                              colors: [AppTheme.primary, Color(0xFFA29BFE)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6C5CE7).withValues(alpha: 0.3),
+                                color: AppTheme.primary.withOpacity(0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -128,7 +130,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Text(
                                 'Total Spend',
                                 style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontFamily: 'Outfit',
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -137,13 +140,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 style: theme.textTheme.displaySmall?.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
+                                  fontFamily: 'Outfit',
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -151,12 +155,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
+                                    fontFamily: 'Outfit',
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
+                        ).animate().fade(duration: 500.ms).slideY(begin: 0.2, end: 0),
                         const SizedBox(height: 32),
 
                         // Category breakdown chart

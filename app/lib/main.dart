@@ -11,6 +11,7 @@ import 'screens/transaction_list_screen.dart';
 import 'screens/screenshot_upload_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,8 +41,6 @@ class ExpenseLensApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme();
-
     Widget initialScreen;
     if (!hasSeenOnboarding) {
       initialScreen = const OnboardingScreen();
@@ -54,22 +53,7 @@ class ExpenseLensApp extends StatelessWidget {
     return MaterialApp(
       title: 'ExpenseLens',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C5CE7), // Premium purple
-        textTheme: textTheme,
-        useMaterial3: true,
-        brightness: Brightness.light,
-      ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: const Color(0xFF6C5CE7),
-        textTheme: textTheme.apply(
-          bodyColor: Colors.white,
-          displayColor: Colors.white,
-        ),
-        useMaterial3: true,
-        brightness: Brightness.dark,
-      ),
-      themeMode: ThemeMode.system,
+      theme: AppTheme.lightTheme,
       home: initialScreen,
       routes: {
         '/add-transaction': (context) => const AddTransactionScreen(),

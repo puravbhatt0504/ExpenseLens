@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../main.dart';
 import '../providers/providers.dart';
+import '../theme/app_theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +17,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    // Scopes required for auth
     scopes: ['email'],
     serverClientId: '264648333363-2qmdh3i22gk2rhittp3cuitn06v21ev5.apps.googleusercontent.com',
   );
@@ -27,7 +28,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
       if (account == null) {
-        // User canceled the sign-in flow
         setState(() => _isLoading = false);
         return;
       }
@@ -36,11 +36,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final String? idToken = auth.idToken;
 
       if (idToken != null) {
-        // Send the token to our backend
         final api = ref.read(apiClientProvider);
         await api.loginWithGoogle(idToken);
 
-        // API Client stores the token securely, so we just navigate
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -63,10 +61,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(40),
@@ -78,35 +74,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Image.asset(
                 'assets/images/logo.png',
                 height: 120,
-                errorBuilder: (ctx, err, stack) => Icon(
+                errorBuilder: (ctx, err, stack) => const Icon(
                   Icons.account_balance_wallet,
                   size: 100,
-                  color: theme.colorScheme.primary,
+                  color: AppTheme.primary,
                 ),
-              ),
+              ).animate().fade(duration: 500.ms).scale(delay: 100.ms),
               const SizedBox(height: 40),
 
               // Welcome Text
               Text(
                 'Welcome Back',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: const Color(0xFF1E1E2C),
+                  color: AppTheme.textPrimary,
                 ),
-              ),
+              ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
               const SizedBox(height: 16),
               Text(
                 'Sign in to sync your expenses across all your devices securely.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
+                style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
+                  color: AppTheme.textSecondary,
                   height: 1.5,
                 ),
-              ),
+              ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
               const SizedBox(height: 60),
 
               // Google Login Button
@@ -115,16 +111,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               else
                 InkWell(
                   onTap: _handleSignIn,
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(16),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Colors.grey[300]!),
+                      color: AppTheme.cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -133,21 +129,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // A simple placeholder for Google icon
-                        Icon(Icons.g_mobiledata, size: 32, color: theme.colorScheme.primary),
+                        const Icon(Icons.g_mobiledata, size: 32, color: AppTheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Continue with Google',
-                          style: GoogleFonts.plusJakartaSans(
+                          style: GoogleFonts.outfit(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E1E2C),
+                            color: AppTheme.textPrimary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                ).animate().fade(delay: 400.ms).slideY(begin: 0.2, end: 0),
             ],
           ),
         ),

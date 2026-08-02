@@ -7,6 +7,21 @@ const db = require('../db');
 
 const router = Router();
 
+// Helper for Pie Chart slices
+function getPieSliceSvg(cx, cy, radius, startAngle, endAngle) {
+  startAngle -= Math.PI / 2;
+  endAngle -= Math.PI / 2;
+  
+  const startX = cx + radius * Math.cos(startAngle);
+  const startY = cy + radius * Math.sin(startAngle);
+  const endX = cx + radius * Math.cos(endAngle);
+  const endY = cy + radius * Math.sin(endAngle);
+  
+  const largeArcFlag = endAngle - startAngle <= Math.PI ? "0" : "1";
+  
+  return `M ${cx} ${cy} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+}
+
 router.get('/', async (req, res) => {
   try {
     const { month } = req.query;
@@ -15,7 +30,7 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: 'month query param required in YYYY-MM format' });
     }
 
-    // 1. Fetch summary data (from Phase 4 logic)
+    // 1. Fetch summary data
     const summaryQuery = `
       SELECT 
         COUNT(t.id) as count,
@@ -29,10 +44,10 @@ router.get('/', async (req, res) => {
     // 2. Fetch category breakdown
     const categoryQuery = `
       SELECT 
-        c.id, c.name, COALESCE(SUM(t.amount), 0) as amount
+        c.id, c.name, c.color, COALESCE(SUM(t.amount), 0) as amount
       FROM categories c
       LEFT JOIN transactions t ON c.id = t.category_id AND to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
-      GROUP BY c.id, c.name
+      GROUP BY c.id, c.name, c.color
       HAVING COALESCE(SUM(t.amount), 0) > 0
       ORDER BY amount DESC
     `;
@@ -49,25 +64,60 @@ router.get('/', async (req, res) => {
     const { rows: transactionRows } = await db.query(transactionsQuery, [month, req.user.id]);
 
     // 4. Initialize PDF Document
-    const doc = new PDFDocument({ margin: 30, size: 'A4' });
+    const doc = new PDFDocument({ margin: 0, size: 'A4' });
 
-    // Stream PDF directly to response
     res.setHeader('Content-disposition', `attachment; filename="ExpenseReport_${month}.pdf"`);
     res.setHeader('Content-type', 'application/pdf');
     doc.pipe(res);
 
-    // Add title
-    doc.fontSize(20).text(`Expense Report: ${month}`, { align: 'center' });
-    doc.moveDown();
+    const primaryColor = '#6C63FF';
+    const textPrimary = '#1E1E2C';
+    const textSecondary = '#8A93A6';
 
-    // Add Total Spend
-    doc.fontSize(16).text(`Total Spend: Rs. ${total.toFixed(2)}`, { align: 'center' });
-    doc.moveDown(2);
+    // Header Background
+    doc.rect(0, 0, 595.28, 150).fill(primaryColor);
+    
+    // Title
+    doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(28).text('ExpenseLens', 40, 40);
+    doc.font('Helvetica').fontSize(14).text(`Monthly Report: ${month}`, 40, 75);
 
-    // Add Category Breakdown Table
+    // Total Spend Card
+    doc.roundedRect(380, 30, 175, 90, 10).fill('#FFFFFF');
+    doc.fillColor(textSecondary).font('Helvetica').fontSize(12).text('Total Spend', 390, 45);
+    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(22).text(`Rs. ${total.toFixed(0)}`, 390, 70);
+    doc.fillColor(textSecondary).font('Helvetica').fontSize(10).text(`${summaryRows[0].count} transactions`, 390, 100);
+
+    doc.x = 40;
+    doc.y = 180;
+    
+    // Category Breakdown & Pie Chart
     if (categoryRows.length > 0) {
-      doc.fontSize(14).text('Category Breakdown', { underline: true });
-      doc.moveDown();
+      doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(18).text('Category Breakdown');
+      doc.moveDown(1);
+      
+      // Draw Pie Chart
+      const cx = 110;
+      const cy = doc.y + 60;
+      const radius = 60;
+      let currentAngle = 0;
+      
+      categoryRows.forEach(row => {
+        const amt = parseFloat(row.amount);
+        const sliceAngle = (amt / total) * 2 * Math.PI;
+        const color = row.color || primaryColor;
+        
+        if (sliceAngle > 1.999 * Math.PI) {
+          doc.circle(cx, cy, radius).fill(color);
+        } else if (sliceAngle > 0) {
+          const svgPath = getPieSliceSvg(cx, cy, radius, currentAngle, currentAngle + sliceAngle);
+          doc.path(svgPath).fill(color);
+        }
+        currentAngle += sliceAngle;
+      });
+
+      // Draw Legend Table beside the pie chart
+      const legendX = cx + radius + 40;
+      const legendY = doc.y;
       
       const categoryTable = {
         headers: ['Category', 'Amount (Rs.)', '% of Total'],
@@ -78,17 +128,34 @@ router.get('/', async (req, res) => {
         }),
       };
       
-      await doc.table(categoryTable, { 
-        prepareHeader: () => doc.font('Helvetica-Bold').fontSize(10),
-        prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font('Helvetica').fontSize(10)
+      await doc.table(categoryTable, {
+        width: 300,
+        x: legendX,
+        y: legendY,
+        prepareHeader: () => doc.font('Helvetica-Bold').fontSize(11).fillColor('#FFFFFF'),
+        prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+          doc.font('Helvetica').fontSize(10).fillColor(textPrimary);
+          // Small color square for legend
+          if (indexColumn === 0) {
+            const rowColor = categoryRows[indexRow]?.color || primaryColor;
+            doc.rect(rectCell.x + 4, rectCell.y + 4, 8, 8).fill(rowColor);
+          }
+        },
+        divider: {
+          header: { disabled: false, width: 2, opacity: 1 },
+          horizontal: { disabled: false, width: 1, opacity: 0.2 },
+        },
+        padding: 8,
       });
-      doc.moveDown(2);
+
+      // Move Y below the chart or table (whichever is taller)
+      doc.y = Math.max(cy + radius + 30, doc.y + 30);
     }
 
-    // Add Transactions Table
+    // Transactions Table
     if (transactionRows.length > 0) {
-      doc.fontSize(14).text('Transactions', { underline: true });
-      doc.moveDown();
+      doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(18).text('Transactions', 40, doc.y);
+      doc.moveDown(0.5);
       
       const transactionsTable = {
         headers: ['Date', 'Merchant / Note', 'Category', 'Amount (Rs.)'],
@@ -108,14 +175,26 @@ router.get('/', async (req, res) => {
       };
       
       await doc.table(transactionsTable, {
-        prepareHeader: () => doc.font('Helvetica-Bold').fontSize(10),
-        prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => doc.font('Helvetica').fontSize(10)
+        width: 515,
+        x: 40,
+        prepareHeader: () => doc.font('Helvetica-Bold').fontSize(11).fillColor('#FFFFFF'),
+        prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+          doc.font('Helvetica').fontSize(10).fillColor(textPrimary);
+        },
+        divider: {
+          header: { disabled: false, width: 2, opacity: 1 },
+          horizontal: { disabled: false, width: 1, opacity: 0.2 },
+        },
+        padding: 8,
       });
     } else {
-      doc.fontSize(12).text('No transactions found for this month.', { align: 'center' });
+      doc.fillColor(textSecondary).font('Helvetica').fontSize(14).text('No transactions found for this month.', { align: 'center' });
     }
 
-    // Finalize PDF
+    // Footer
+    doc.moveDown(2);
+    doc.fillColor('#CCCCCC').font('Helvetica').fontSize(10).text('Generated by ExpenseLens', { align: 'center' });
+
     doc.end();
 
   } catch (err) {
