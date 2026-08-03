@@ -13,52 +13,87 @@ import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
-  
-  const storage = FlutterSecureStorage();
-  final hasAuthToken = await storage.containsKey(key: 'auth_token');
-
-  runApp(ProviderScope(
-    child: ExpenseLensApp(
-      hasSeenOnboarding: hasSeenOnboarding,
-      hasAuthToken: hasAuthToken,
-    ),
+  runApp(const ProviderScope(
+    child: ExpenseLensApp(),
   ));
 }
 
 class ExpenseLensApp extends StatelessWidget {
-  final bool hasSeenOnboarding;
-  final bool hasAuthToken;
-
-  const ExpenseLensApp({
-    super.key, 
-    required this.hasSeenOnboarding,
-    required this.hasAuthToken,
-  });
+  const ExpenseLensApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Widget initialScreen;
-    if (!hasSeenOnboarding) {
-      initialScreen = const OnboardingScreen();
-    } else if (!hasAuthToken) {
-      initialScreen = const LoginScreen();
-    } else {
-      initialScreen = const AppShell();
-    }
-
     return MaterialApp(
       title: 'ExpenseLens',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: initialScreen,
+      home: const SplashScreen(),
       routes: {
         '/add-transaction': (context) => const AddTransactionScreen(),
         '/screenshot-upload': (context) => const ScreenshotUploadScreen(),
       },
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
+
+    const storage = FlutterSecureStorage();
+    final hasAuthToken = await storage.containsKey(key: 'auth_token');
+
+    if (!mounted) return;
+
+    Widget nextScreen;
+    if (!hasSeenOnboarding) {
+      nextScreen = const OnboardingScreen();
+    } else if (!hasAuthToken) {
+      nextScreen = const LoginScreen();
+    } else {
+      nextScreen = const AppShell();
+    }
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // A highly optimized, lightweight splash screen
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Image.asset(
+          'assets/images/logo.png',
+          width: 150,
+          height: 150,
+        ),
+      ),
     );
   }
 }

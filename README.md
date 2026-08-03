@@ -9,13 +9,14 @@ ExpenseLens is a modern, AI-powered mobile expense tracker built with Flutter an
 1. **Frontend (Flutter)**: A beautiful, cross-platform mobile app featuring Google Auth, glassmorphic UI, smooth onboarding, and interactive `fl_chart` dashboards.
 2. **Backend (Express API)**: A Node.js API hosted on Vercel. Handles Google OAuth token verification, Postgres database interactions, and the receipt parsing.
 3. **Database (Neon Postgres)**: A serverless PostgreSQL database storing users, categories, rules, and transactions.
-4. **OCR Engine (Tesseract.js)**: Runs securely in-memory on the Vercel backend to parse screenshot text and extract amounts, dates, and merchants using Regex.
+4. **OCR Engine (Google ML Kit)**: Blazing-fast, on-device text recognition running securely on the user's phone, sending only lightweight extracted text to the backend.
 
 ## Features
 
-- **Google Authentication**: Secure, one-tap login.
-- **Smart Receipt Scanning**: Upload a UPI payment screenshot and automatically log the expense without manual data entry.
-- **Premium UI**: Inspired by modern financial apps with smooth page transitions and interactive pie charts.
+- **Google Authentication**: Secure, one-tap login verified securely on Vercel.
+- **Instant Receipt Scanning**: Upload a UPI payment or Food Delivery screenshot, and ML Kit extracts the text instantly while Vercel auto-categorizes it using regex rules.
+- **Premium UI**: Inspired by modern financial apps with glassmorphic elements, optimized RepaintBoundaries for 60fps animations, and interactive `fl_chart` dashboards.
+- **Lightning Fast Startup**: Asynchronous initialization with a seamless splash screen ensures zero blank screens on boot.
 - **Monthly Summaries**: Instantly view category breakdowns and totals.
 
 ## Setup Instructions

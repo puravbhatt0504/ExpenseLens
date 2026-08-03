@@ -63,51 +63,53 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           itemCount: _slides.length,
           itemBuilder: (context, index) {
             final slide = _slides[index];
-            return Container(
-              color: slide.color,
-              padding: const EdgeInsets.all(40),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (slide.imagePath != null)
-                    Image.asset(
-                      slide.imagePath!,
-                      height: 250,
-                      errorBuilder: (ctx, err, stack) => const Icon(
-                        Icons.account_balance_wallet,
-                        size: 150,
+            return RepaintBoundary(
+              child: Container(
+                color: slide.color,
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (slide.imagePath != null)
+                      Image.asset(
+                        slide.imagePath!,
+                        height: 250,
+                        errorBuilder: (ctx, err, stack) => const Icon(
+                          Icons.account_balance_wallet,
+                          size: 150,
+                          color: Colors.white,
+                        ),
+                      ).animate().fade(duration: 400.ms).scale(duration: 400.ms)
+                    else
+                      Icon(
+                        slide.icon,
+                        size: 180,
                         color: Colors.white,
+                      ).animate().fade(duration: 400.ms).scale(duration: 400.ms),
+                    const SizedBox(height: 60),
+                    Text(
+                      slide.title,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 1.2,
                       ),
-                    ).animate().fade(duration: 500.ms).scale(delay: 100.ms)
-                  else
-                    Icon(
-                      slide.icon,
-                      size: 180,
-                      color: Colors.white,
-                    ).animate().fade(duration: 500.ms).slideY(begin: 0.2, end: 0),
-                  const SizedBox(height: 60),
-                  Text(
-                    slide.title,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.2,
-                    ),
-                  ).animate().fade(delay: 200.ms).slideY(begin: 0.2, end: 0),
-                  const SizedBox(height: 20),
-                  Text(
-                    slide.description,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withOpacity(0.9),
-                      height: 1.5,
-                    ),
-                  ).animate().fade(delay: 300.ms).slideY(begin: 0.2, end: 0),
-                ],
+                    ).animate().fade(delay: 100.ms, duration: 400.ms),
+                    const SizedBox(height: 20),
+                    Text(
+                      slide.description,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withOpacity(0.9),
+                        height: 1.5,
+                      ),
+                    ).animate().fade(delay: 200.ms, duration: 400.ms),
+                  ],
+                ),
               ),
             );
           },
@@ -115,57 +117,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       bottomSheet: Container(
         color: _isLastPage ? _slides.last.color : _slides[_pageController.hasClients && _pageController.page != null ? _pageController.page!.round() : 0].color,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        height: 80,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            SmoothPageIndicator(
-              controller: _pageController,
-              count: _slides.length,
-              effect: const ExpandingDotsEffect(
-                activeDotColor: Colors.white,
-                dotColor: Colors.white54,
-                dotHeight: 8,
-                dotWidth: 8,
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                if (_isLastPage) {
-                  _completeOnboarding();
-                } else {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 500),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              },
-              borderRadius: BorderRadius.circular(30),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  _isLastPage ? 'Get Started' : 'Next',
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _slides.last.color, // Fallback color
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SmoothPageIndicator(
+                  controller: _pageController,
+                  count: _slides.length,
+                  effect: const ExpandingDotsEffect(
+                    activeDotColor: Colors.white,
+                    dotColor: Colors.white54,
+                    dotHeight: 8,
+                    dotWidth: 8,
                   ),
                 ),
-              ),
+                InkWell(
+                  onTap: () {
+                    if (_isLastPage) {
+                      _completeOnboarding();
+                    } else {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _isLastPage ? 'Get Started' : 'Next',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _isLastPage ? _slides.last.color : AppTheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,8 @@
 # General
 .DS_Store
 .env
-.env.local
+.env.*
+server/.env*
 node_modules/
 .vscode/
 

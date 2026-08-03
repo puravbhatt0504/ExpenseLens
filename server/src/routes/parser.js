@@ -75,13 +75,13 @@ router.post('/', upload.single('receipt'), async (req, res) => {
 
     } catch (e) {
       console.error('Tesseract execution/parsing failed:', e);
-      return res.status(500).json({ error: 'Failed to parse image' });
+      return res.status(500).json({ error: 'Failed to parse image', details: e.message || String(e) });
     }
 
     res.json(parsedData);
   } catch (err) {
     console.error('POST /parse-receipt error:', err);
-    res.status(500).json({ error: 'Failed to parse receipt' });
+    res.status(500).json({ error: 'Failed to parse receipt', details: err.message || String(err) });
   }
 });
 

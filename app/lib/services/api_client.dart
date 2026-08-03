@@ -96,12 +96,18 @@ class ApiClient {
     return Summary.fromJson(response.data);
   }
 
-  /// POST /parse-receipt — parse UPI/PhonePe screenshot
+  /// POST /parse-receipt — parse UPI/PhonePe screenshot (legacy)
   Future<Map<String, dynamic>> parseReceipt(String imagePath) async {
     final formData = FormData.fromMap({
       'receipt': await MultipartFile.fromFile(imagePath, filename: 'receipt.jpg'),
     });
     final response = await _dio.post('/parse-receipt', data: formData);
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// POST /parse-text — parse text extracted from screenshot via ML Kit
+  Future<Map<String, dynamic>> parseText(String text) async {
+    final response = await _dio.post('/parse-text', data: {'text': text});
     return response.data as Map<String, dynamic>;
   }
 

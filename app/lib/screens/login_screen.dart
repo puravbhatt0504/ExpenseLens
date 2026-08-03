@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
+import 'package:dio/dio.dart';
 import '../main.dart';
 import '../providers/providers.dart';
 import '../theme/app_theme.dart';
@@ -49,8 +49,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (error) {
       if (!mounted) return;
+      String errMsg = error.toString();
+      if (error is DioException && error.response?.data != null) {
+        errMsg = error.response!.data.toString();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $error')),
+        SnackBar(content: Text('Login failed: $errMsg')),
       );
     } finally {
       if (mounted) {

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/providers.dart';
+import 'package:dio/dio.dart';
 import 'review_draft_screen.dart';
+
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 /// Screenshot Upload screen — pick a UPI/PhonePe screenshot for parsing.
 class ScreenshotUploadScreen extends ConsumerStatefulWidget {
@@ -16,7 +19,14 @@ class ScreenshotUploadScreen extends ConsumerStatefulWidget {
 class _ScreenshotUploadScreenState
     extends ConsumerState<ScreenshotUploadScreen> {
   final ImagePicker _picker = ImagePicker();
+  final TextRecognizer _textRecognizer = TextRecognizer();
   bool _isProcessing = false;
+
+  @override
+  void dispose() {
+    _textRecognizer.close();
+    super.dispose();
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -25,8 +35,14 @@ class _ScreenshotUploadScreenState
 
       setState(() => _isProcessing = true);
 
+      // Perform OCR locally using ML Kit
+      final inputImage = InputImage.fromFilePath(image.path);
+      final recognizedText = await _textRecognizer.processImage(inputImage);
+      final text = recognizedText.text;
+
+      // Send the extracted text to the backend for parsing
       final api = ref.read(apiClientProvider);
-      final parsedData = await api.parseReceipt(image.path);
+      final parsedData = await api.parseText(text);
 
       if (mounted) {
         // Navigate to the Review Draft screen with parsed data
@@ -39,9 +55,15 @@ class _ScreenshotUploadScreenState
       }
     } catch (e) {
       if (mounted) {
+        String errMsg = e.toString();
+        if (e is DioException && e.response?.data != null) {
+          errMsg = e.response!.data.toString();
+        } else if (e is DioException && e.response?.statusCode != null) {
+          errMsg = 'Status Code: ${e.response?.statusCode}';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to parse screenshot. Falling back to manual entry.'),
+            content: Text('Failed to parse: $errMsg'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

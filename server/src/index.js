@@ -25,10 +25,13 @@ app.use(express.json());
 app.use('/auth', authRouter);
 app.use('/categories', categoriesRouter); // Assuming categories are global for now
 
+const parseTextRouter = require('./routes/parse-text');
+
 // Protected Routes
 app.use('/transactions', requireAuth, transactionsRouter);
 app.use('/summary', requireAuth, summaryRouter);
 app.use('/parse-receipt', requireAuth, parserRouter);
+app.use('/parse-text', requireAuth, parseTextRouter);
 app.use('/report', requireAuth, reportRouter);
 
 // Health check
