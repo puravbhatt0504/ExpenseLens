@@ -11,11 +11,11 @@ import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+import 'screens/budget_screen.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(
-    child: ExpenseLensApp(),
-  ));
+  runApp(const ProviderScope(child: ExpenseLensApp()));
 }
 
 class ExpenseLensApp extends StatelessWidget {
@@ -25,13 +25,16 @@ class ExpenseLensApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ExpenseLens',
-      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       routes: {
         '/add-transaction': (context) => const AddTransactionScreen(),
         '/screenshot-upload': (context) => const ScreenshotUploadScreen(),
         '/login': (context) => const LoginScreen(),
+        '/budget': (context) => const BudgetScreen(),
       },
     );
   }

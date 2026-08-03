@@ -39,16 +39,34 @@ router.get('/', async (req, res) => {
     `;
     const categoryResult = await db.query(categoryQuery, [month, req.user.id]);
 
+    // 3. Get user's total budget
+    const userResult = await db.query('SELECT monthly_budget FROM users WHERE id = $1', [req.user.id]);
+    const totalBudget = userResult.rows[0]?.monthly_budget ? parseFloat(userResult.rows[0].monthly_budget) : null;
+
+    // 4. Get category budgets
+    const budgetQuery = `
+      SELECT category_id, budget_amount
+      FROM user_category_budgets
+      WHERE user_id = $1
+    `;
+    const budgetResult = await db.query(budgetQuery, [req.user.id]);
+    const budgetMap = {};
+    for (const row of budgetResult.rows) {
+      budgetMap[row.category_id] = parseFloat(row.budget_amount);
+    }
+
     res.json({
       month,
       count: parseInt(count, 10),
       total: parseFloat(total),
+      totalBudget,
       byCategory: categoryResult.rows.map(row => ({
         categoryId: row.category_id,
         categoryName: row.category_name || 'Uncategorized',
         categoryIcon: row.category_icon || '📌',
         categoryColor: row.category_color || '#C0C0C0',
-        amount: parseFloat(row.amount)
+        amount: parseFloat(row.amount),
+        budget: budgetMap[row.category_id] || null
       }))
     });
   } catch (err) {

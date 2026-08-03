@@ -143,7 +143,24 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
-  // Transactions
+  Future<void> setBudgets(double? totalBudget, Map<int, double?> categoryBudgets) async {
+    final Map<String, dynamic> data = {};
+    if (totalBudget != null) {
+      data['totalBudget'] = totalBudget;
+    }
+    
+    if (categoryBudgets.isNotEmpty) {
+      final Map<String, dynamic> categoryBudgetsMap = {};
+      categoryBudgets.forEach((key, value) {
+        categoryBudgetsMap[key.toString()] = value;
+      });
+      data['categoryBudgets'] = categoryBudgetsMap;
+    }
+
+    await _dio.put('/budgets', data: data);
+  }
+
+  // --- Transactions ---
   // ---------------------------------------------------------------------------
 
   /// POST /transactions — create a transaction.

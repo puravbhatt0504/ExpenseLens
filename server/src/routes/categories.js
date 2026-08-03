@@ -12,6 +12,9 @@ router.get('/', async (req, res) => {
     const { rows } = await db.query(
       'SELECT id, name, icon, color FROM categories ORDER BY id'
     );
+    // Cache categories aggressively (1 hour at edge, 1 hour at browser)
+    // Categories are shared across all users and rarely change
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, max-age=3600');
     res.json(rows);
   } catch (err) {
     console.error('GET /categories error:', err);

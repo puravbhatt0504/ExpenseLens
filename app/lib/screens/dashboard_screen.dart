@@ -69,6 +69,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            tooltip: 'Set Budget',
+            onPressed: () {
+              Navigator.pushNamed(context, '/budget');
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () async {
@@ -169,6 +176,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   ),
                                 ),
                               ),
+                              if (summary.totalBudget != null && summary.totalBudget! > 0) ...[
+                                const SizedBox(height: 24),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Budget: ₹${summary.totalBudget!.toStringAsFixed(0)}',
+                                          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          '${((summary.total / summary.totalBudget!) * 100).clamp(0, 100).toStringAsFixed(1)}%',
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: LinearProgressIndicator(
+                                        value: (summary.total / summary.totalBudget!).clamp(0.0, 1.0),
+                                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          summary.total > summary.totalBudget! ? Colors.redAccent : Colors.white,
+                                        ),
+                                        minHeight: 8,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
                           ),
                         ).animate().fade(duration: 500.ms).slideY(begin: 0.2, end: 0),
@@ -277,6 +317,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                   fontWeight: FontWeight.w600,
                                                 ),
                                               ),
+                                              if (cat.budget != null && cat.budget! > 0) ...[
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      'Budget: ₹${cat.budget!.toStringAsFixed(0)}',
+                                                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+                                                    ),
+                                                    Text(
+                                                      '${((cat.amount / cat.budget!) * 100).clamp(0, 100).toStringAsFixed(1)}%',
+                                                      style: theme.textTheme.bodySmall?.copyWith(
+                                                        color: cat.amount > cat.budget! ? Colors.redAccent : theme.colorScheme.primary,
+                                                        fontWeight: FontWeight.w700,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                                ClipRRect(
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  child: LinearProgressIndicator(
+                                                    value: (cat.amount / cat.budget!).clamp(0.0, 1.0),
+                                                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                                      cat.amount > cat.budget! ? Colors.redAccent : _parseColor(cat.categoryColor),
+                                                    ),
+                                                    minHeight: 4,
+                                                  ),
+                                                ),
+                                              ],
                                             ],
                                           ),
                                         ),

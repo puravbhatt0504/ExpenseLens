@@ -9,6 +9,7 @@ class CategorySpend {
   final String categoryIcon;
   final String categoryColor;
   final double amount;
+  final double? budget;
 
   CategorySpend({
     this.categoryId,
@@ -16,6 +17,7 @@ class CategorySpend {
     required this.categoryIcon,
     required this.categoryColor,
     required this.amount,
+    this.budget,
   });
 
   factory CategorySpend.fromJson(Map<String, dynamic> json) =>
@@ -29,12 +31,14 @@ class Summary {
   final String month;
   final int count;
   final double total;
+  final double? totalBudget;
   final List<CategorySpend> byCategory;
 
   Summary({
     required this.month,
     required this.count,
     required this.total,
+    this.totalBudget,
     required this.byCategory,
   });
 
