@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../models/summary.dart';
@@ -17,12 +19,10 @@ final selectedMonthProvider = StateProvider<DateTime>((ref) {
   return DateTime(now.year, now.month);
 });
 
-/// Formats a DateTime to YYYY-MM string for the API.
 String formatMonth(DateTime date) {
   return '${date.year}-${date.month.toString().padLeft(2, '0')}';
 }
 
-/// Returns a human-readable month string like "August 2026".
 String formatMonthDisplay(DateTime date) {
   const months = [
     '', 'January', 'February', 'March', 'April', 'May', 'June',
@@ -40,24 +40,116 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
-// Transactions for the selected month
+// Transactions for the selected month (with Caching)
 // ---------------------------------------------------------------------------
-final transactionsProvider = FutureProvider<List<Transaction>>((ref) async {
-  final api = ref.read(apiClientProvider);
-  final month = ref.watch(selectedMonthProvider);
-  return api.getTransactions(formatMonth(month));
+class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
+  @override
+  Future<List<Transaction>> build() async {
+    final monthStr = formatMonth(ref.watch(selectedMonthProvider));
+    
+    // 1. Try to load from cache immediately
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('cache_transactions_$monthStr');
+    if (cachedData != null) {
+      try {
+        final List<dynamic> jsonList = jsonDecode(cachedData);
+        final cachedTxns = jsonList.map((json) => Transaction.fromJson(json)).toList();
+        // Set the state with cached data right away
+        state = AsyncData(cachedTxns);
+      } catch (_) {}
+    }
+
+    // 2. Fetch fresh data from network in background
+    _fetchFresh(monthStr);
+
+    // Return the current state's value (or empty list if no cache)
+    return state.value ?? [];
+  }
+
+  Future<void> _fetchFresh(String monthStr) async {
+    try {
+      final api = ref.read(apiClientProvider);
+      final freshTxns = await api.getTransactions(monthStr);
+      
+      // Update cache
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = freshTxns.map((t) => t.toJson()).toList();
+      await prefs.setString('cache_transactions_$monthStr', jsonEncode(jsonList));
+      
+      // Update state
+      state = AsyncData(freshTxns);
+    } catch (e, st) {
+      // If we don't have cached data, report the error. Otherwise, keep the cache.
+      if (!state.hasValue || state.value!.isEmpty) {
+        state = AsyncError(e, st);
+      }
+    }
+  }
+
+  // Allow manual refresh
+  Future<void> refresh() async {
+    final monthStr = formatMonth(ref.read(selectedMonthProvider));
+    state = const AsyncLoading();
+    await _fetchFresh(monthStr);
+  }
+}
+
+final transactionsProvider = AsyncNotifierProvider<TransactionsNotifier, List<Transaction>>(() {
+  return TransactionsNotifier();
 });
 
 // ---------------------------------------------------------------------------
-// Summary for the selected month
+// Summary for the selected month (with Caching)
 // ---------------------------------------------------------------------------
-final summaryProvider = FutureProvider<Summary>((ref) async {
-  final api = ref.read(apiClientProvider);
-  final month = ref.watch(selectedMonthProvider);
-  
-  // Make sure to reload summary if transactions change (e.g. new transaction added)
-  // Watching transactionsProvider ensures we refresh when it invalidates.
-  ref.watch(transactionsProvider);
-  
-  return api.getSummary(formatMonth(month));
+class SummaryNotifier extends AsyncNotifier<Summary> {
+  @override
+  Future<Summary> build() async {
+    final monthStr = formatMonth(ref.watch(selectedMonthProvider));
+    
+    // Watch transactions so summary updates if a new transaction is added
+    ref.watch(transactionsProvider);
+    
+    // 1. Try to load from cache immediately
+    final prefs = await SharedPreferences.getInstance();
+    final cachedData = prefs.getString('cache_summary_$monthStr');
+    if (cachedData != null) {
+      try {
+        final cachedSummary = Summary.fromJson(jsonDecode(cachedData));
+        state = AsyncData(cachedSummary);
+      } catch (_) {}
+    }
+
+    // 2. Fetch fresh data
+    _fetchFresh(monthStr);
+
+    return state.value ?? Summary(month: monthStr, total: 0, count: 0, byCategory: []);
+  }
+
+  Future<void> _fetchFresh(String monthStr) async {
+    try {
+      final api = ref.read(apiClientProvider);
+      final freshSummary = await api.getSummary(monthStr);
+      
+      // Update cache
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cache_summary_$monthStr', jsonEncode(freshSummary.toJson()));
+      
+      // Update state
+      state = AsyncData(freshSummary);
+    } catch (e, st) {
+      if (!state.hasValue) {
+        state = AsyncError(e, st);
+      }
+    }
+  }
+
+  Future<void> refresh() async {
+    final monthStr = formatMonth(ref.read(selectedMonthProvider));
+    state = const AsyncLoading();
+    await _fetchFresh(monthStr);
+  }
+}
+
+final summaryProvider = AsyncNotifierProvider<SummaryNotifier, Summary>(() {
+  return SummaryNotifier();
 });

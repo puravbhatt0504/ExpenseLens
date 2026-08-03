@@ -40,9 +40,21 @@ class _ScreenshotUploadScreenState
       final recognizedText = await _textRecognizer.processImage(inputImage);
       final text = recognizedText.text;
 
+      // Debug: log the raw OCR output so we can diagnose parsing issues
+      debugPrint('=== ML Kit OCR Output START ===');
+      debugPrint(text);
+      debugPrint('=== ML Kit OCR Output END ===');
+      debugPrint('OCR text length: ${text.length} chars, ${text.split('\n').length} lines');
+
       // Send the extracted text to the backend for parsing
       final api = ref.read(apiClientProvider);
       final parsedData = await api.parseText(text);
+      
+      debugPrint('=== Parse Result ===');
+      debugPrint('Amount: ${parsedData['amount']}');
+      debugPrint('Merchant: ${parsedData['merchant']}');
+      debugPrint('Category: ${parsedData['categoryId']}');
+      debugPrint('Note: ${parsedData['note']}');
 
       if (mounted) {
         // Navigate to the Review Draft screen with parsed data

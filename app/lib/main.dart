@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -33,6 +31,7 @@ class ExpenseLensApp extends StatelessWidget {
       routes: {
         '/add-transaction': (context) => const AddTransactionScreen(),
         '/screenshot-upload': (context) => const ScreenshotUploadScreen(),
+        '/login': (context) => const LoginScreen(),
       },
     );
   }

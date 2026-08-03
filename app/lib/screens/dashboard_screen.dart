@@ -68,6 +68,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: const Text('ExpenseLens'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await ref.read(apiClientProvider).logout();
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
+          ),
           if (_isDownloading)
             const Padding(
               padding: EdgeInsets.all(16.0),
@@ -99,7 +109,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               data: (summary) {
                 return RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(summaryProvider);
+                    await ref.read(summaryProvider.notifier).refresh();
                   },
                   child: SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
@@ -119,7 +129,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             borderRadius: BorderRadius.circular(32),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.3),
+                                color: AppTheme.primary.withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -130,7 +140,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Text(
                                 'Total Spend',
                                 style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontFamily: 'Outfit',
                                 ),
                               ),
@@ -147,7 +157,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(

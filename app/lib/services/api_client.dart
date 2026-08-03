@@ -30,16 +30,34 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Skip token check for auth and public routes
+          if (options.path.startsWith('/auth') || options.path.startsWith('/categories')) {
+            return handler.next(options);
+          }
+          
           final token = await _storage.read(key: 'auth_token');
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
+            return handler.next(options);
+          } else {
+            // If token is missing for protected routes, throw an error.
+            return handler.reject(
+              DioException(
+                requestOptions: options,
+                error: 'Session expired. Please restart the app and log in again.',
+              ),
+            );
           }
-          return handler.next(options);
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Handle unauthorized (e.g., clear token, trigger logout)
+            // Handle unauthorized (e.g., clear token)
             await _storage.delete(key: 'auth_token');
+            error = DioException(
+              requestOptions: error.requestOptions,
+              response: error.response,
+              error: 'Session expired. Please restart the app and log in again.',
+            );
           }
           return handler.next(error);
         }

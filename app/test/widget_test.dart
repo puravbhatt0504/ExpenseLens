@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 void main() {
   testWidgets('App starts and shows navigation', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const ProviderScope(child: ExpenseLensApp(hasSeenOnboarding: true, hasAuthToken: true)));
+    await tester.pumpWidget(const ProviderScope(child: ExpenseLensApp()));
 
     // Verify that bottom navigation items are present
     expect(find.text('Dashboard'), findsOneWidget);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import '../providers/providers.dart';
 import '../models/transaction.dart';
 
@@ -124,7 +125,7 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
             : null,
         note: _noteController.text.isNotEmpty ? _noteController.text : null,
         categoryId: _selectedCategoryId,
-        source: 'screenshot',
+        source: 'upi_screenshot',
         rawExtracted: widget.parsedData, // Save original parsed data for audit
         suggestedCategoryId: _suggestedCategoryId,
       );
@@ -143,11 +144,23 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errMsg = e.toString();
+        if (e is DioException && e.response?.data != null) {
+          errMsg = 'Server Error: ${e.response?.statusCode} - ${e.response?.data}';
+          debugPrint('=== DIO EXCEPTION START ===');
+          debugPrint('Status: ${e.response?.statusCode}');
+          debugPrint('Data: ${e.response?.data}');
+          debugPrint('=== DIO EXCEPTION END ===');
+        } else {
+          debugPrint('=== EXCEPTION ===');
+          debugPrint(e.toString());
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save transaction: $e'),
+            content: Text(errMsg),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

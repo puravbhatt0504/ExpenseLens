@@ -39,6 +39,7 @@ router.post('/', async (req, res) => {
     );
 
     const transaction = rows[0];
+    transaction.amount = parseFloat(transaction.amount);
 
     // If there was a suggested category and the user changed it, log it for future learning
     const suggested_category_id = req.body.suggested_category_id;
@@ -79,7 +80,14 @@ router.get('/', async (req, res) => {
       [month, req.user.id]
     );
 
-    res.json(rows);
+    // Postgres numeric types are returned as strings by node-postgres.
+    // Parse them to floats so Flutter's json parser doesn't crash on 'String is not a subtype of double'.
+    const mappedRows = rows.map(r => ({
+      ...r,
+      amount: parseFloat(r.amount)
+    }));
+
+    res.json(mappedRows);
   } catch (err) {
     console.error('GET /transactions error:', err);
     res.status(500).json({ error: 'Failed to fetch transactions' });
@@ -125,8 +133,11 @@ router.patch('/:id', async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Transaction not found or unauthorized' });
     }
+    
+    const transaction = rows[0];
+    transaction.amount = parseFloat(transaction.amount);
 
-    res.json(rows[0]);
+    res.json(transaction);
   } catch (err) {
     console.error('PATCH /transactions/:id error:', err);
     res.status(500).json({ error: 'Failed to update transaction' });

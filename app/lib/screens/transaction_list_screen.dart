@@ -62,7 +62,7 @@ class TransactionListScreen extends ConsumerWidget {
 
                 return RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(transactionsProvider);
+                    await ref.read(transactionsProvider.notifier).refresh();
                   },
                   child: ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
