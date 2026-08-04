@@ -16,7 +16,7 @@ const router = Router();
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
   try {
-    const { amount, txn_date, merchant, note, category_id, source, raw_extracted } = req.body;
+    const { amount, txn_date, merchant, note, category_id, source, raw_extracted, payment_method } = req.body;
 
     // Basic validation
     if (!amount || !txn_date || !source) {
@@ -32,10 +32,10 @@ router.post('/', async (req, res) => {
     }
 
     const { rows } = await db.query(
-      `INSERT INTO transactions (amount, txn_date, merchant, note, category_id, source, raw_extracted, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO transactions (amount, txn_date, merchant, note, category_id, source, raw_extracted, payment_method, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [amount, txn_date, merchant || null, note || null, category_id || null, source, raw_extracted || null, req.user.id]
+      [amount, txn_date, merchant || null, note || null, category_id || null, source, raw_extracted || null, payment_method || 'cash', req.user.id]
     );
 
     const transaction = rows[0];
@@ -107,7 +107,7 @@ router.patch('/:id', async (req, res) => {
     }
 
     // Build dynamic SET clause from the provided fields
-    const allowedFields = ['amount', 'txn_date', 'merchant', 'note', 'category_id', 'source', 'raw_extracted'];
+    const allowedFields = ['amount', 'txn_date', 'merchant', 'note', 'category_id', 'source', 'raw_extracted', 'payment_method'];
     const setClauses = [];
     const values = [];
     let paramIndex = 1;

@@ -16,6 +16,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [merchant, setMerchant] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
   
   // Reset form when modal closes
   const handleClose = () => {
@@ -23,6 +24,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
     setDate(new Date().toISOString().split('T')[0]);
     setMerchant('');
     setCategoryId('');
+    setPaymentMethod('UPI');
     setError('');
     onClose();
   };
@@ -43,7 +45,8 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
         txn_date: date,
         merchant: merchant || 'Untitled',
         category_id: categoryId ? Number(categoryId) : null,
-        source: 'manual'
+        source: 'manual',
+        payment_method: paymentMethod
       });
       
       onSuccess(); // Triggers SWR mutate in parent
@@ -138,6 +141,23 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                   value={merchant}
                   onChange={e => setMerchant(e.target.value)}
                 />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <CreditCard size={14} className="text-text-muted" /> Payment Method
+                </label>
+                <select
+                  className="w-full px-4 py-2.5 rounded-lg border border-border focus:border-black focus:ring-1 focus:ring-black outline-none transition-all font-semibold text-sm bg-white"
+                  value={paymentMethod}
+                  onChange={e => setPaymentMethod(e.target.value)}
+                >
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Net Banking">Net Banking</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-1.5">

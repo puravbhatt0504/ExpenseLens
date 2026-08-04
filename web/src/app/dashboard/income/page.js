@@ -26,6 +26,7 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [source, setSource] = useState('Salary');
+  const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');
   const [note, setNote] = useState('');
 
   const handleSubmit = async (e) => {
@@ -40,7 +41,8 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
         amount: Number(amount),
         date,
         source: source || 'Other',
-        note: note || ''
+        note: note || '',
+        payment_method: paymentMethod
       });
       onSuccess();
       setAmount('');
@@ -112,6 +114,18 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
                   <option value="Gift">Gift</option>
                   <option value="Interest">Interest</option>
                   <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-semibold">Received In (Payment Method)</label>
+                <select
+                  className="w-full px-4 py-2 rounded-lg border border-border focus:border-[#2e7d32] focus:ring-1 focus:ring-[#2e7d32] outline-none transition-all font-semibold bg-white"
+                  value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}
+                >
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Cheque">Cheque</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">
@@ -260,7 +274,9 @@ export default function IncomePage() {
                           </div>
                           <div>
                             <h3 className="font-bold text-foreground">{inc.source}</h3>
-                            <p className="text-xs text-text-muted font-medium">{inc.note || 'No note'} • {date}</p>
+                            <p className="text-xs text-text-muted font-medium">
+                              {inc.note || 'No note'} • {inc.payment_method || 'Bank Transfer'} • {date}
+                            </p>
                           </div>
                         </div>
                         <div className="text-right font-extrabold text-lg text-[#2e7d32]">

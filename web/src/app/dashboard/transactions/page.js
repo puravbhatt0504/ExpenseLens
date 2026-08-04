@@ -104,7 +104,7 @@ export default function TransactionsPage() {
                       <th className="py-3 px-6 font-semibold border-b border-border">Date</th>
                       <th className="py-3 px-6 font-semibold border-b border-border">Merchant / Note</th>
                       <th className="py-3 px-6 font-semibold border-b border-border">Category</th>
-                      <th className="py-3 px-6 font-semibold border-b border-border">Source</th>
+                      <th className="py-3 px-6 font-semibold border-b border-border">Payment Method</th>
                       <th className="py-3 px-6 font-semibold border-b border-border text-right">Amount</th>
                     </tr>
                   </thead>
@@ -132,7 +132,7 @@ export default function TransactionsPage() {
                             </span>
                           </td>
                           <td className="py-4 px-6 text-text-muted capitalize text-xs">
-                            {txn.source ? txn.source.replace('_', ' ') : 'Manual'}
+                            {txn.payment_method || (txn.source ? txn.source.replace('_', ' ') : 'Cash')}
                           </td>
                           <td className="py-4 px-6 text-right font-bold text-foreground">
                             {formatCurrency(txn.amount)}

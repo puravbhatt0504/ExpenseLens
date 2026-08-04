@@ -14,7 +14,7 @@ const router = Router();
 // POST /incomes
 router.post('/', async (req, res) => {
   try {
-    const { amount, date, source, note } = req.body;
+    const { amount, date, source, note, payment_method } = req.body;
 
     if (!amount || !date) {
       return res.status(400).json({
@@ -23,10 +23,10 @@ router.post('/', async (req, res) => {
     }
 
     const { rows } = await db.query(
-      `INSERT INTO incomes (amount, date, source, note, user_id)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO incomes (amount, date, source, note, payment_method, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [amount, date, source || null, note || null, req.user.id]
+      [amount, date, source || null, note || null, payment_method || 'cash', req.user.id]
     );
 
     const income = rows[0];
@@ -79,7 +79,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    const allowedFields = ['amount', 'date', 'source', 'note'];
+    const allowedFields = ['amount', 'date', 'source', 'note', 'payment_method'];
     const setClauses = [];
     const values = [];
     let paramIndex = 1;
