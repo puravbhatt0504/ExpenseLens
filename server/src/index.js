@@ -28,8 +28,13 @@ app.use('/categories', categoriesRouter); // Assuming categories are global for 
 const parseTextRouter = require('./routes/parse-text');
 const budgetsRouter = require('./routes/budgets');
 
+const incomesRouter = require('./routes/incomes');
+const savingsRouter = require('./routes/savings');
+
 // Protected Routes
 app.use('/transactions', requireAuth, transactionsRouter);
+app.use('/incomes', requireAuth, incomesRouter);
+app.use('/savings', requireAuth, savingsRouter);
 app.use('/summary', requireAuth, summaryRouter);
 app.use('/budgets', requireAuth, budgetsRouter);
 app.use('/parse-receipt', requireAuth, parserRouter);

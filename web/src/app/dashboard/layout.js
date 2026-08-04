@@ -7,7 +7,9 @@ import {
   LayoutDashboard, 
   Receipt, 
   Wallet, 
-  LogOut 
+  LogOut,
+  Landmark,
+  PiggyBank
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -21,8 +23,10 @@ export default function DashboardLayout({ children }) {
 
   const navItems = [
     { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Income', path: '/dashboard/income', icon: Landmark },
     { name: 'Transactions', path: '/dashboard/transactions', icon: Receipt },
     { name: 'Budgets', path: '/dashboard/budgets', icon: Wallet },
+    { name: 'Savings', path: '/dashboard/savings', icon: PiggyBank },
   ];
 
   return (
