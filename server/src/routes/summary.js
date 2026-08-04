@@ -23,6 +23,15 @@ router.get('/', async (req, res) => {
     const totalResult = await db.query(totalQuery, [month, req.user.id]);
     const { count, total } = totalResult.rows[0];
 
+    // 1b. Get total income
+    const incomeQuery = `
+      SELECT COALESCE(SUM(amount), 0) as total_income
+      FROM incomes
+      WHERE to_char(date, 'YYYY-MM') = $1 AND user_id = $2
+    `;
+    const incomeResult = await db.query(incomeQuery, [month, req.user.id]);
+    const totalIncome = incomeResult.rows[0].total_income;
+
     // 2. Get category breakdown
     const categoryQuery = `
       SELECT 
@@ -59,6 +68,7 @@ router.get('/', async (req, res) => {
       month,
       count: parseInt(count, 10),
       total: parseFloat(total),
+      totalIncome: parseFloat(totalIncome),
       totalBudget,
       byCategory: categoryResult.rows.map(row => ({
         categoryId: row.category_id,
