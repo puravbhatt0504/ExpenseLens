@@ -24,7 +24,7 @@ export default function BudgetsPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (budgetsData) {
+    if (budgetsData && budgetsData.categoryBudgets) {
       const bMap = {};
       budgetsData.categoryBudgets.forEach(b => {
         bMap[b.categoryId] = b.amount;
@@ -59,11 +59,13 @@ export default function BudgetsPage() {
         categoryBudgets: {}
       };
       
-      for (const cat of categories) {
-        if (budgets[cat.id] !== undefined && budgets[cat.id] !== '') {
-          payload.categoryBudgets[cat.id] = Number(budgets[cat.id]);
-        } else {
-          payload.categoryBudgets[cat.id] = null;
+      if (categories) {
+        for (const cat of categories) {
+          if (budgets[cat.id] !== undefined && budgets[cat.id] !== '') {
+            payload.categoryBudgets[cat.id] = Number(budgets[cat.id]);
+          } else {
+            payload.categoryBudgets[cat.id] = null;
+          }
         }
       }
       
@@ -89,6 +91,10 @@ export default function BudgetsPage() {
           {loading ? (
             <div className="flex justify-center items-center h-[60vh]">
               <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
+            </div>
+          ) : (catsError || budgError) ? (
+            <div className="flex justify-center items-center h-[60vh] text-[#e00] font-medium">
+              Failed to load budgets.
             </div>
           ) : (
             <motion.div 

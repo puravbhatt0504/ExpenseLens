@@ -81,7 +81,12 @@ export default function TransactionsPage() {
               <div className="flex h-full justify-center items-center py-20">
                 <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
               </div>
-            ) : transactions.length === 0 ? (
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-20 text-[#e00] text-sm font-medium">
+                <AlertCircle size={24} className="opacity-50 mb-2" />
+                Failed to load transactions.
+              </div>
+            ) : (!transactions || transactions.length === 0) ? (
               <div className="flex flex-col items-center justify-center py-20 text-text-muted text-sm font-medium">
                 <AlertCircle size={24} className="opacity-50 mb-2" />
                 No transactions recorded this month.
@@ -127,7 +132,7 @@ export default function TransactionsPage() {
                             </span>
                           </td>
                           <td className="py-4 px-6 text-text-muted capitalize text-xs">
-                            {txn.source.replace('_', ' ')}
+                            {txn.source ? txn.source.replace('_', ' ') : 'Manual'}
                           </td>
                           <td className="py-4 px-6 text-right font-bold text-foreground">
                             {formatCurrency(txn.amount)}
