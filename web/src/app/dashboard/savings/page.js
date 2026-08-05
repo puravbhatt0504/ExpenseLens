@@ -10,7 +10,8 @@ import {
   Plus,
   Target,
   X,
-  ArrowRight
+  ArrowRight,
+  Wallet
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
@@ -194,6 +195,13 @@ export default function SavingsPage() {
     }
   });
 
+  const [currentMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const { data: summary } = useSWR(`/summary?month=${currentMonth}`, fetcher);
+
   const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
@@ -209,7 +217,26 @@ export default function SavingsPage() {
       <AddFundsModal isOpen={!!selectedGoal} onClose={() => setSelectedGoal(null)} goal={selectedGoal} onSuccess={() => mutate()} />
 
       <div className="flex-1 overflow-y-auto p-10 bg-surface">
-        <div className="max-w-[1200px] mx-auto">
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
+
+          {summary && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-r from-[#6C63FF] to-[#0284c7] rounded-2xl p-6 shadow-sm text-white flex items-center gap-6"
+            >
+              <div className="bg-white/20 p-4 rounded-full">
+                <Wallet size={32} />
+              </div>
+              <div>
+                <p className="text-white/80 text-sm font-semibold mb-1 uppercase tracking-wider">Net Monthly Savings</p>
+                <h2 className="text-3xl font-extrabold tracking-tight">
+                  {formatCurrency(summary.totalIncome - summary.total)}
+                </h2>
+                <p className="text-white/70 text-xs font-medium mt-1">Actual Cash Flow (Total Income - Total Spend)</p>
+              </div>
+            </motion.div>
+          )}
+
           {isLoading ? (
             <div className="flex h-[50vh] justify-center items-center">
               <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
