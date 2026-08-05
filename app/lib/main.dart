@@ -111,12 +111,21 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    IncomeScreen(),
-    TransactionListScreen(),
-    SavingsScreen(),
-  ];
+  final GlobalKey<IncomeScreenState> _incomeKey = GlobalKey();
+  final GlobalKey<SavingsScreenState> _savingsKey = GlobalKey();
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const DashboardScreen(),
+      IncomeScreen(key: _incomeKey),
+      const TransactionListScreen(),
+      SavingsScreen(key: _savingsKey),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,15 +159,30 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      floatingActionButton: (_currentIndex == 0 || _currentIndex == 2)
-          ? FloatingActionButton(
-              onPressed: () {
-                _showAddOptions(context);
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: _buildFab(),
     );
+  }
+
+  Widget? _buildFab() {
+    if (_currentIndex == 0 || _currentIndex == 2) {
+      return FloatingActionButton(
+        onPressed: () => _showAddOptions(context),
+        child: const Icon(Icons.add),
+      );
+    } else if (_currentIndex == 1) {
+      return FloatingActionButton.extended(
+        onPressed: () => _incomeKey.currentState?.showAddIncomeModal(),
+        icon: const Icon(Icons.add),
+        label: const Text('Add Income'),
+      );
+    } else if (_currentIndex == 3) {
+      return FloatingActionButton.extended(
+        onPressed: () => _savingsKey.currentState?.showAddGoalModal(),
+        icon: const Icon(Icons.add),
+        label: const Text('New Goal'),
+      );
+    }
+    return null;
   }
 
   void _showAddOptions(BuildContext context) {

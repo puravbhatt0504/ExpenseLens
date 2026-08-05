@@ -11,10 +11,10 @@ class IncomeScreen extends ConsumerStatefulWidget {
   const IncomeScreen({super.key});
 
   @override
-  ConsumerState<IncomeScreen> createState() => _IncomeScreenState();
+  ConsumerState<IncomeScreen> createState() => IncomeScreenState();
 }
 
-class _IncomeScreenState extends ConsumerState<IncomeScreen> {
+class IncomeScreenState extends ConsumerState<IncomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _sourceController = TextEditingController();
@@ -31,7 +31,7 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
     super.dispose();
   }
 
-  void _showAddIncomeModal() {
+  void showAddIncomeModal() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -132,14 +132,6 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Income Tracking'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Add Income',
-            onPressed: _showAddIncomeModal,
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: Column(
         children: [

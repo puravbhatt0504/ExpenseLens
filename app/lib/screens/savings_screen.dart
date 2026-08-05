@@ -7,10 +7,10 @@ class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
 
   @override
-  ConsumerState<SavingsScreen> createState() => _SavingsScreenState();
+  ConsumerState<SavingsScreen> createState() => SavingsScreenState();
 }
 
-class _SavingsScreenState extends ConsumerState<SavingsScreen> {
+class SavingsScreenState extends ConsumerState<SavingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
@@ -23,7 +23,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     super.dispose();
   }
 
-  void _showAddGoalModal() {
+  void showAddGoalModal() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -120,14 +120,6 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Savings Goals'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'New Goal',
-            onPressed: _showAddGoalModal,
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: savingsAsync.when(
         data: (goals) {
