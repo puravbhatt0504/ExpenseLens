@@ -164,7 +164,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget? _buildFab() {
-    if (_currentIndex == 0 || _currentIndex == 2) {
+    if (_currentIndex == 2) {
       return FloatingActionButton(
         onPressed: () => _showAddOptions(context),
         child: const Icon(Icons.add),

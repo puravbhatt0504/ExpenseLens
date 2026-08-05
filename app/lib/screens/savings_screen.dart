@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import '../providers/providers.dart';
+import '../theme/app_theme.dart';
 
 class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
@@ -14,6 +16,7 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
+  DateTime? _selectedTargetDate;
   bool _isSubmitting = false;
 
   @override
@@ -54,6 +57,27 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) => (val == null || double.tryParse(val) == null) ? 'Invalid amount' : null,
               ),
+              const SizedBox(height: 12),
+              StatefulBuilder(
+                builder: (context, setModalState) => OutlinedButton.icon(
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 30)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 3650)),
+                    );
+                    if (date != null) {
+                      setModalState(() => _selectedTargetDate = date);
+                      setState(() => _selectedTargetDate = date);
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(_selectedTargetDate == null
+                      ? 'Select Target Date (Optional)'
+                      : 'Target: ${DateFormat('MMM yyyy').format(_selectedTargetDate!)}'),
+                ),
+              ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: _isSubmitting ? null : _submitNewGoal,
@@ -75,6 +99,9 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
       await api.createSavingsGoal(
         name: _nameController.text,
         targetAmount: double.parse(_amountController.text),
+        targetDate: _selectedTargetDate != null 
+            ? '${_selectedTargetDate!.year}-${_selectedTargetDate!.month.toString().padLeft(2, '0')}-${_selectedTargetDate!.day.toString().padLeft(2, '0')}'
+            : null,
       );
       ref.invalidate(savingsProvider);
       if (mounted) Navigator.pop(context);
@@ -116,13 +143,53 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
   @override
   Widget build(BuildContext context) {
     final savingsAsync = ref.watch(savingsProvider);
+    final summaryAsync = ref.watch(summaryProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Savings Goals'),
       ),
-      body: savingsAsync.when(
-        data: (goals) {
+      body: Column(
+        children: [
+          // Net Savings Card
+          summaryAsync.when(
+            data: (summary) {
+              final netSavings = summary.totalIncome - summary.total;
+              return Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.secondary]),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.account_balance_wallet, color: Colors.white, size: 40),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Net Monthly Savings', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          Text(
+                            '₹${netSavings.toStringAsFixed(0)}',
+                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                          ),
+                          const Text('Actual Cash Flow (Income - Expenses)', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fade().slideY();
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (e, _) => const SizedBox.shrink(),
+          ),
+          
+          Expanded(
+            child: savingsAsync.when(
+              data: (goals) {
           if (goals.isEmpty) {
             return const Center(child: Text('No savings goals yet. Create one!'));
           }
@@ -146,7 +213,15 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(goal.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(goal.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                if (goal.targetDate != null)
+                                  Text('Target: ${DateFormat('MMM yyyy').format(DateTime.parse(goal.targetDate!))}', 
+                                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                              ],
+                            ),
                             Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                           ],
                         ),
@@ -180,6 +255,6 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
       ),
-    );
+    )]));
   }
 }
