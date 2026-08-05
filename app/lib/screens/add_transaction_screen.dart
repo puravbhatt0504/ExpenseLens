@@ -21,6 +21,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   DateTime _selectedDate = DateTime.now();
   int? _selectedCategoryId;
+  String _selectedPaymentMethod = 'UPI';
   bool _isSubmitting = false;
 
   Transaction? _existingTransaction;
@@ -37,6 +38,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         _merchantController.text = args.merchant ?? '';
         _noteController.text = args.note ?? '';
         _selectedCategoryId = args.categoryId;
+        _selectedPaymentMethod = args.paymentMethod ?? 'UPI';
         
         try {
           _selectedDate = DateTime.parse(args.txnDate);
@@ -85,6 +87,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             if (_merchantController.text.isNotEmpty) 'merchant': _merchantController.text,
             if (_noteController.text.isNotEmpty) 'note': _noteController.text,
             if (_selectedCategoryId != null) 'category_id': _selectedCategoryId,
+            'payment_method': _selectedPaymentMethod,
           }
         );
       } else {
@@ -96,6 +99,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               : null,
           note: _noteController.text.isNotEmpty ? _noteController.text : null,
           categoryId: _selectedCategoryId,
+          paymentMethod: _selectedPaymentMethod,
           source: 'manual',
         );
       }
@@ -264,6 +268,29 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                   child: Text('Failed to load categories: $err',
                       style: TextStyle(color: theme.colorScheme.error)),
                 ),
+              ),
+              const SizedBox(height: 16),
+
+              // Payment Method dropdown
+              DropdownButtonFormField<String>(
+                value: _selectedPaymentMethod,
+                decoration: const InputDecoration(
+                  labelText: 'Payment Method',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.payment),
+                ),
+                isExpanded: true,
+                items: ['UPI', 'Credit Card', 'Debit Card', 'Cash', 'Net Banking']
+                    .map((method) => DropdownMenuItem(
+                          value: method,
+                          child: Text(method),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedPaymentMethod = value);
+                  }
+                },
               ),
               const SizedBox(height: 32),
 

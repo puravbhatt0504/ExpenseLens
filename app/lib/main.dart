@@ -9,6 +9,8 @@ import 'screens/transaction_list_screen.dart';
 import 'screens/screenshot_upload_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/income_screen.dart';
+import 'screens/savings_screen.dart';
 import 'theme/app_theme.dart';
 
 import 'screens/budget_screen.dart';
@@ -113,7 +115,9 @@ class _AppShellState extends State<AppShell> {
 
   final List<Widget> _screens = const [
     DashboardScreen(),
+    IncomeScreen(),
     TransactionListScreen(),
+    SavingsScreen(),
   ];
 
   @override
@@ -132,9 +136,19 @@ class _AppShellState extends State<AppShell> {
             label: 'Dashboard',
           ),
           NavigationDestination(
+            icon: Icon(Icons.trending_up_outlined),
+            selectedIcon: Icon(Icons.trending_up),
+            label: 'Income',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
-            label: 'Transactions',
+            label: 'Expenses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.savings_outlined),
+            selectedIcon: Icon(Icons.savings),
+            label: 'Savings',
           ),
         ],
       ),

@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../models/summary.dart';
+import '../models/income.dart';
+import '../models/savings_goal.dart';
 
 /// API client service wrapping all REST calls to the ExpenseLens backend.
 class ApiClient {
@@ -171,6 +173,7 @@ class ApiClient {
     String? note,
     int? categoryId,
     required String source,
+    String? paymentMethod,
     Map<String, dynamic>? rawExtracted,
     int? suggestedCategoryId,
   }) async {
@@ -182,6 +185,7 @@ class ApiClient {
     if (merchant != null) body['merchant'] = merchant;
     if (note != null) body['note'] = note;
     if (categoryId != null) body['category_id'] = categoryId;
+    if (paymentMethod != null) body['payment_method'] = paymentMethod;
     if (rawExtracted != null) body['raw_extracted'] = rawExtracted;
     if (suggestedCategoryId != null) body['suggested_category_id'] = suggestedCategoryId;
 
@@ -212,5 +216,66 @@ class ApiClient {
   /// DELETE /transactions/:id — delete a transaction.
   Future<void> deleteTransaction(int id) async {
     await _dio.delete('/transactions/$id');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Incomes
+  // ---------------------------------------------------------------------------
+
+  Future<List<Income>> getIncomes(String month) async {
+    final response = await _dio.get('/incomes', queryParameters: {'month': month});
+    final List<dynamic> data = response.data;
+    return data.map((json) => Income.fromJson(json)).toList();
+  }
+
+  Future<Income> createIncome({
+    required double amount,
+    required String date,
+    String? source,
+    String? note,
+    String? paymentMethod,
+  }) async {
+    final body = <String, dynamic>{
+      'amount': amount,
+      'date': date,
+    };
+    if (source != null) body['source'] = source;
+    if (note != null) body['note'] = note;
+    if (paymentMethod != null) body['payment_method'] = paymentMethod;
+
+    final response = await _dio.post('/incomes', data: body);
+    return Income.fromJson(response.data);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Savings
+  // ---------------------------------------------------------------------------
+
+  Future<List<SavingsGoal>> getSavingsGoals() async {
+    final response = await _dio.get('/savings');
+    final List<dynamic> data = response.data;
+    return data.map((json) => SavingsGoal.fromJson(json)).toList();
+  }
+
+  Future<SavingsGoal> createSavingsGoal({
+    required String name,
+    required double targetAmount,
+    String? targetDate,
+  }) async {
+    final body = <String, dynamic>{
+      'name': name,
+      'target_amount': targetAmount,
+    };
+    if (targetDate != null) body['target_date'] = targetDate;
+    
+    final response = await _dio.post('/savings', data: body);
+    return SavingsGoal.fromJson(response.data);
+  }
+
+  Future<SavingsGoal> addFundsToGoal(int id, double currentAmount) async {
+    final response = await _dio.patch('/savings/$id', data: {
+      'current_amount': currentAmount,
+    });
+    return SavingsGoal.fromJson(response.data);
   }
 }

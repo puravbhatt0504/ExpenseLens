@@ -19,6 +19,7 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) => Transaction(
   categoryName: json['category_name'] as String?,
   categoryIcon: json['category_icon'] as String?,
   categoryColor: json['category_color'] as String?,
+  paymentMethod: json['payment_method'] as String?,
 );
 
 Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
@@ -32,6 +33,7 @@ Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
       'source': instance.source,
       'raw_extracted': instance.rawExtracted,
       'created_at': instance.createdAt,
+      'payment_method': instance.paymentMethod,
       'category_name': instance.categoryName,
       'category_icon': instance.categoryIcon,
       'category_color': instance.categoryColor,

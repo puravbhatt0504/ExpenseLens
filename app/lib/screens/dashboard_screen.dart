@@ -8,7 +8,7 @@ import '../widgets/month_switcher.dart';
 import '../theme/app_theme.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-/// Dashboard screen — displays monthly spend total and category breakdown chart.
+/// Dashboard screen — displays monthly spend, income, and category breakdown chart.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -104,16 +104,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       body: Column(
         children: [
-          // Month switcher (shared with Transaction List)
+          // Month switcher
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: MonthSwitcher(),
           ),
 
-          // Quick stats and chart
           Expanded(
             child: summaryAsync.when(
               data: (summary) {
+                final netBalance = summary.totalIncome - summary.total;
+                final isPositive = netBalance >= 0;
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     await ref.read(summaryProvider.notifier).refresh();
@@ -123,96 +125,129 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        // Total spend card with gradient
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.primary, Color(0xFFA29BFE)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        // Top row of metrics
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildMetricCard(
+                                title: 'Net Balance',
+                                amount: '₹${netBalance.abs().toStringAsFixed(0)}',
+                                prefix: isPositive ? '+' : '-',
+                                color: isPositive ? Colors.green : Colors.red,
+                                icon: Icons.scale_rounded,
+                              ).animate().fade(duration: 500.ms).slideY(begin: 0.2, end: 0),
                             ),
-                            borderRadius: BorderRadius.circular(32),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Total Spend',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontFamily: 'Outfit',
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildMetricCard(
+                                title: 'Income',
+                                amount: '₹${summary.totalIncome.toStringAsFixed(0)}',
+                                color: Colors.green,
+                                icon: Icons.trending_up,
+                              ).animate().fade(duration: 500.ms, delay: 100.ms).slideY(begin: 0.2, end: 0),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildMetricCard(
+                          title: 'Spend',
+                          amount: '₹${summary.total.toStringAsFixed(0)}',
+                          color: Colors.red,
+                          icon: Icons.trending_down,
+                          budgetInfo: summary.totalBudget != null ? {
+                            'total': summary.totalBudget!,
+                            'spent': summary.total,
+                          } : null,
+                        ).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
+
+                        const SizedBox(height: 32),
+
+                        // Cash Flow Chart
+                        if (summary.totalIncome > 0 || summary.total > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '₹${summary.total.toStringAsFixed(2)}',
-                                style: theme.textTheme.displaySmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  fontFamily: 'Outfit',
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '${summary.count} transaction${summary.count == 1 ? '' : 's'}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Outfit',
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Cash Flow',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                              ),
-                              if (summary.totalBudget != null && summary.totalBudget! > 0) ...[
-                                const SizedBox(height: 24),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          'Budget: ₹${summary.totalBudget!.toStringAsFixed(0)}',
-                                          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+                                const SizedBox(height: 32),
+                                SizedBox(
+                                  height: 250,
+                                  child: BarChart(
+                                    BarChartData(
+                                      alignment: BarChartAlignment.spaceAround,
+                                      maxY: (summary.totalIncome > summary.total ? summary.totalIncome : summary.total) * 1.2,
+                                      barTouchData: BarTouchData(enabled: true),
+                                      titlesData: FlTitlesData(
+                                        show: true,
+                                        bottomTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            getTitlesWidget: (value, meta) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(top: 8.0),
+                                                child: Text(
+                                                  value == 0 ? 'Income' : 'Spend',
+                                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
-                                        Text(
-                                          '${((summary.total / summary.totalBudget!) * 100).clamp(0, 100).toStringAsFixed(1)}%',
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                      ),
+                                      gridData: const FlGridData(show: false),
+                                      borderData: FlBorderData(show: false),
+                                      barGroups: [
+                                        BarChartGroupData(
+                                          x: 0,
+                                          barRods: [
+                                            BarChartRodData(
+                                              toY: summary.totalIncome,
+                                              color: Colors.green,
+                                              width: 40,
+                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                            ),
+                                          ],
+                                        ),
+                                        BarChartGroupData(
+                                          x: 1,
+                                          barRods: [
+                                            BarChartRodData(
+                                              toY: summary.total,
+                                              color: Colors.red,
+                                              width: 40,
+                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LinearProgressIndicator(
-                                        value: (summary.total / summary.totalBudget!).clamp(0.0, 1.0),
-                                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          summary.total > summary.totalBudget! ? Colors.redAccent : Colors.white,
-                                        ),
-                                        minHeight: 8,
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ],
-                            ],
-                          ),
-                        ).animate().fade(duration: 500.ms).slideY(begin: 0.2, end: 0),
-                        const SizedBox(height: 32),
+                            ),
+                          ).animate().fade(duration: 500.ms, delay: 300.ms).slideY(begin: 0.2, end: 0),
+                          const SizedBox(height: 32),
+                        ],
 
                         // Category breakdown chart
                         if (summary.total > 0 && summary.byCategory.isNotEmpty)
@@ -233,7 +268,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Category Breakdown',
+                                  'Expense Breakdown',
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -263,7 +298,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              'Total',
+                                              'Total Spend',
                                               style: theme.textTheme.bodyMedium?.copyWith(
                                                 color: theme.colorScheme.outline,
                                               ),
@@ -363,8 +398,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 }),
                               ],
                             ),
-                          )
-                        else
+                          ).animate().fade(duration: 500.ms, delay: 400.ms).slideY(begin: 0.2, end: 0)
+                        else if (summary.total == 0)
                           Container(
                             padding: const EdgeInsets.all(40),
                             decoration: BoxDecoration(
@@ -418,6 +453,90 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard({
+    required String title,
+    required String amount,
+    String? prefix,
+    required Color color,
+    required IconData icon,
+    Map<String, double>? budgetInfo,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${prefix ?? ''}$amount',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: color == Colors.red ? theme.colorScheme.onSurface : color,
+            ),
+          ),
+          if (budgetInfo != null && budgetInfo['total']! > 0) ...[
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Budget: ₹${budgetInfo['total']!.toStringAsFixed(0)}',
+                  style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
+                ),
+                Text(
+                  '${((budgetInfo['spent']! / budgetInfo['total']!) * 100).clamp(0, 100).toStringAsFixed(1)}%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: budgetInfo['spent']! > budgetInfo['total']! ? Colors.red : Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (budgetInfo['spent']! / budgetInfo['total']!).clamp(0.0, 1.0),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  budgetInfo['spent']! > budgetInfo['total']! ? Colors.red : Colors.green,
+                ),
+                minHeight: 6,
+              ),
+            ),
+          ],
         ],
       ),
     );

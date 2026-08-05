@@ -31,6 +31,7 @@ class Summary {
   final String month;
   final int count;
   final double total;
+  final double totalIncome;
   final double? totalBudget;
   final List<CategorySpend> byCategory;
 
@@ -38,6 +39,7 @@ class Summary {
     required this.month,
     required this.count,
     required this.total,
+    this.totalIncome = 0.0,
     this.totalBudget,
     required this.byCategory,
   });

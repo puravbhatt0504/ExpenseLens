@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category.dart';
-import '../models/transaction.dart';
 import '../models/summary.dart';
+import '../models/income.dart';
+import '../models/savings_goal.dart';
 import '../services/api_client.dart';
 
 // ---------------------------------------------------------------------------
@@ -106,8 +107,9 @@ class SummaryNotifier extends AsyncNotifier<Summary> {
   Future<Summary> build() async {
     final monthStr = formatMonth(ref.watch(selectedMonthProvider));
     
-    // Watch transactions so summary updates if a new transaction is added
+    // Watch transactions and incomes so summary updates if added
     ref.watch(transactionsProvider);
+    ref.watch(incomesProvider);
     
     // 1. Try to load from cache immediately
     final prefs = await SharedPreferences.getInstance();
@@ -152,4 +154,68 @@ class SummaryNotifier extends AsyncNotifier<Summary> {
 
 final summaryProvider = AsyncNotifierProvider<SummaryNotifier, Summary>(() {
   return SummaryNotifier();
+});
+
+// ---------------------------------------------------------------------------
+// Incomes for the selected month
+// ---------------------------------------------------------------------------
+class IncomesNotifier extends AsyncNotifier<List<Income>> {
+  @override
+  Future<List<Income>> build() async {
+    final monthStr = formatMonth(ref.watch(selectedMonthProvider));
+    return _fetchFresh(monthStr);
+  }
+
+  Future<List<Income>> _fetchFresh(String monthStr) async {
+    try {
+      final api = ref.read(apiClientProvider);
+      return await api.getIncomes(monthStr);
+    } catch (e, st) {
+      if (!state.hasValue || state.value!.isEmpty) {
+        state = AsyncError(e, st);
+      }
+      return [];
+    }
+  }
+
+  Future<void> refresh() async {
+    final monthStr = formatMonth(ref.read(selectedMonthProvider));
+    state = const AsyncLoading();
+    state = AsyncData(await _fetchFresh(monthStr));
+  }
+}
+
+final incomesProvider = AsyncNotifierProvider<IncomesNotifier, List<Income>>(() {
+  return IncomesNotifier();
+});
+
+// ---------------------------------------------------------------------------
+// Savings Goals
+// ---------------------------------------------------------------------------
+class SavingsNotifier extends AsyncNotifier<List<SavingsGoal>> {
+  @override
+  Future<List<SavingsGoal>> build() async {
+    return _fetchFresh();
+  }
+
+  Future<List<SavingsGoal>> _fetchFresh() async {
+    try {
+      final api = ref.read(apiClientProvider);
+      return await api.getSavingsGoals();
+    } catch (e, st) {
+      if (!state.hasValue || state.value!.isEmpty) {
+        state = AsyncError(e, st);
+      }
+      return [];
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = AsyncData(await _fetchFresh());
+  }
+}
+
+final savingsProvider = AsyncNotifierProvider<SavingsNotifier, List<SavingsGoal>>(() {
+  return SavingsNotifier();
 });

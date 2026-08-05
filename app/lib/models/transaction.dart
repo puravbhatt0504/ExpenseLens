@@ -24,6 +24,9 @@ class Transaction {
   @JsonKey(name: 'created_at')
   final String? createdAt;
 
+  @JsonKey(name: 'payment_method')
+  final String? paymentMethod;
+
   // Joined fields from GET /transactions
   @JsonKey(name: 'category_name')
   final String? categoryName;
@@ -47,6 +50,7 @@ class Transaction {
     this.categoryName,
     this.categoryIcon,
     this.categoryColor,
+    this.paymentMethod,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) =>
