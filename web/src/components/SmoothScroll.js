@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactLenis } from 'lenis/react';
+import 'lenis/dist/lenis.css';
 import { useRef, useState, useEffect } from 'react';
 
 export default function SmoothScroll({ children, className = "flex-1 overflow-y-auto h-full bg-surface relative" }) {
