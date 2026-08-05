@@ -130,7 +130,17 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
     final incomesAsync = ref.watch(incomesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Income Tracking')),
+      appBar: AppBar(
+        title: const Text('Income Tracking'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Add Income',
+            onPressed: _showAddIncomeModal,
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Column(
         children: [
           const Padding(
@@ -174,11 +184,6 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddIncomeModal,
-        label: const Text('Add Income'),
-        icon: const Icon(Icons.add),
       ),
     );
   }

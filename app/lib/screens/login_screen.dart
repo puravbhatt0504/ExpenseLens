@@ -137,10 +137,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(width: 8),
                         Text(
                           'Continue with Google',
-                          style: GoogleFonts.outfit(
+                          style: GoogleFonts.roboto(
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
                           ),
                         ),
                       ],

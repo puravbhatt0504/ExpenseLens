@@ -28,8 +28,6 @@ class ExpenseLensApp extends StatelessWidget {
     return MaterialApp(
       title: 'ExpenseLens',
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       routes: {
@@ -152,12 +150,14 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddOptions(context);
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: (_currentIndex == 0 || _currentIndex == 2)
+          ? FloatingActionButton(
+              onPressed: () {
+                _showAddOptions(context);
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 

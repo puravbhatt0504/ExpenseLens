@@ -43,7 +43,7 @@ void main() async {
       source: 'manual',
       paymentMethod: 'UPI'
     );
-    print('✅ Transaction created: ₹\${txn.amount} via \${txn.paymentMethod ?? 'Unknown'}');
+    print('✅ Transaction created: ₹\${txn.amount} via \${txn.paymentMethod ?? "Unknown"}');
 
     print('\n6. Fetching Summary (Dashboard)...');
     final summary = await api.getSummary('2026-08');

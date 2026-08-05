@@ -118,7 +118,17 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
     final savingsAsync = ref.watch(savingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Savings Goals')),
+      appBar: AppBar(
+        title: const Text('Savings Goals'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'New Goal',
+            onPressed: _showAddGoalModal,
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: savingsAsync.when(
         data: (goals) {
           if (goals.isEmpty) {
@@ -177,11 +187,6 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddGoalModal,
-        label: const Text('New Goal'),
-        icon: const Icon(Icons.flag),
       ),
     );
   }
