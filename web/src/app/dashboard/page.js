@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
+import SmoothScroll from '@/components/SmoothScroll';
 
 export default function DashboardOverview() {
   const router = useRouter();
@@ -86,7 +87,7 @@ export default function DashboardOverview() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-10 bg-surface">
+      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[1200px] mx-auto">
           {loading ? (
             <div className="flex flex-1 justify-center items-center h-[60vh]">
@@ -241,7 +242,7 @@ export default function DashboardOverview() {
             <div className="text-center text-sm font-medium text-[#e00] mt-10">Failed to load dashboard data.</div>
           )}
         </div>
-      </div>
+      </SmoothScroll>
     </>
   );
 }

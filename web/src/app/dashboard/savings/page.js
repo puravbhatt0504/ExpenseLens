@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
+import SmoothScroll from '@/components/SmoothScroll';
 
 const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -216,7 +217,7 @@ export default function SavingsPage() {
       <AddGoalModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={() => mutate()} />
       <AddFundsModal isOpen={!!selectedGoal} onClose={() => setSelectedGoal(null)} goal={selectedGoal} onSuccess={() => mutate()} />
 
-      <div className="flex-1 overflow-y-auto p-10 bg-surface">
+      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
 
           {summary && (
@@ -318,7 +319,7 @@ export default function SavingsPage() {
             </motion.div>
           )}
         </div>
-      </div>
+      </SmoothScroll>
     </>
   );
 }

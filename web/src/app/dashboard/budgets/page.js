@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
+import SmoothScroll from '@/components/SmoothScroll';
 
 export default function BudgetsPage() {
   const router = useRouter();
@@ -86,7 +87,7 @@ export default function BudgetsPage() {
         <h1 className="text-lg font-semibold tracking-tight">Budgets</h1>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[800px] mx-auto">
           {loading ? (
             <div className="flex justify-center items-center h-[60vh]">
@@ -183,7 +184,7 @@ export default function BudgetsPage() {
             </motion.div>
           )}
         </div>
-      </div>
+      </SmoothScroll>
     </>
   );
 }

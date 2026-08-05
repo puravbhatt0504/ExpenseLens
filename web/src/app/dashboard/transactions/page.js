@@ -14,6 +14,7 @@ import {
 import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
 import AddTransactionModal from '@/components/AddTransactionModal';
+import SmoothScroll from '@/components/SmoothScroll';
 
 export default function TransactionsPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function TransactionsPage() {
         onSuccess={() => mutate()} 
       />
 
-      <div className="flex-1 overflow-y-auto p-10">
+      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[1000px] mx-auto bg-white border border-border rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[500px]">
           
           <div className="p-6 border-b border-border flex items-center gap-3">
@@ -146,7 +147,7 @@ export default function TransactionsPage() {
             )}
           </div>
         </div>
-      </div>
+      </SmoothScroll>
     </>
   );
 }

@@ -15,9 +15,9 @@ ExpenseLens is a modern, AI-powered mobile expense tracker built with Flutter an
 
 - **Google Authentication**: Secure, one-tap login verified securely on Vercel.
 - **Instant Receipt Scanning**: Upload a UPI payment or Food Delivery screenshot, and ML Kit extracts the text instantly while Vercel auto-categorizes it using regex rules.
-- **Premium UI**: Inspired by modern financial apps with glassmorphic elements, optimized RepaintBoundaries for 60fps animations, and interactive `fl_chart` dashboards.
+- **Premium UI**: Inspired by modern financial apps with glassmorphic elements, optimized RepaintBoundaries for 60fps animations, interactive `fl_chart` dashboards, and silky smooth web scrolling powered by Lenis.
 - **Lightning Fast Startup**: Asynchronous initialization with a seamless splash screen ensures zero blank screens on boot.
-- **Monthly Summaries**: Instantly view category breakdowns and totals.
+- **Cash Flow & Savings Tracking**: Instantly view category breakdowns, track Net Monthly Savings, and set precise deadlines for your long-term Savings Goals across both Web and Mobile.
 
 ## Setup Instructions
 

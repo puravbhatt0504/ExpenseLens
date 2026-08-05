@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
+import SmoothScroll from '@/components/SmoothScroll';
 
 const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -204,7 +205,7 @@ export default function IncomePage() {
 
       <AddIncomeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={() => mutate()} />
 
-      <div className="flex-1 overflow-y-auto p-10 bg-surface">
+      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[1000px] mx-auto flex flex-col gap-8">
           
           <motion.div 
@@ -291,7 +292,7 @@ export default function IncomePage() {
           </div>
 
         </div>
-      </div>
+      </SmoothScroll>
     </>
   );
 }
