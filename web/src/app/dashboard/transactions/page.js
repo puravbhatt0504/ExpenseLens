@@ -20,6 +20,7 @@ import SmoothScroll from '@/components/SmoothScroll';
 export default function TransactionsPage() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('date');
   
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
@@ -88,6 +89,21 @@ export default function TransactionsPage() {
               <h2 className="text-lg font-bold tracking-tight">Ledger</h2>
               <p className="text-sm font-medium text-text-muted">All recorded transactions for {monthName}</p>
             </div>
+            
+            <div className="ml-auto flex bg-surface p-1 rounded-lg border border-border">
+              <button 
+                onClick={() => setSortBy('date')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${sortBy === 'date' ? 'bg-white shadow-sm text-foreground' : 'text-text-muted hover:text-foreground'}`}
+              >
+                By Date
+              </button>
+              <button 
+                onClick={() => setSortBy('category')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${sortBy === 'category' ? 'bg-white shadow-sm text-foreground' : 'text-text-muted hover:text-foreground'}`}
+              >
+                By Category
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 p-0">
@@ -123,7 +139,16 @@ export default function TransactionsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {transactions.map((txn, i) => {
+                    {[...transactions].sort((a, b) => {
+                      if (sortBy === 'category') {
+                        const catA = a.category_name || 'Uncategorized';
+                        const catB = b.category_name || 'Uncategorized';
+                        if (catA < catB) return -1;
+                        if (catA > catB) return 1;
+                        return new Date(b.txn_date) - new Date(a.txn_date);
+                      }
+                      return new Date(b.txn_date) - new Date(a.txn_date);
+                    }).map((txn, i) => {
                       const date = new Date(txn.txn_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                       return (
                         <motion.tr 

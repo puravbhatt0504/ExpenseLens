@@ -5,11 +5,18 @@ import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
 
 /// Transaction List screen — shows transactions grouped by date for the selected month.
-class TransactionListScreen extends ConsumerWidget {
+class TransactionListScreen extends ConsumerStatefulWidget {
   const TransactionListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TransactionListScreen> createState() => _TransactionListScreenState();
+}
+
+class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
+  String _groupBy = 'date';
+
+  @override
+  Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
     final theme = Theme.of(context);
 
@@ -21,8 +28,38 @@ class TransactionListScreen extends ConsumerWidget {
         children: [
           // Month switcher
           const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: MonthSwitcher(),
+          ),
+          
+          // Grouping controls
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text('Group by: ', style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.outline,
+                )),
+                const SizedBox(width: 8),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'date', label: Text('Date'), icon: Icon(Icons.calendar_today, size: 16)),
+                    ButtonSegment(value: 'category', label: Text('Category'), icon: Icon(Icons.category, size: 16)),
+                  ],
+                  selected: {_groupBy},
+                  onSelectionChanged: (set) {
+                    setState(() => _groupBy = set.first);
+                  },
+                  showSelectedIcon: false,
+                  style: SegmentedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           // Transaction list
@@ -56,9 +93,9 @@ class TransactionListScreen extends ConsumerWidget {
                   );
                 }
 
-                // Group transactions by date
-                final grouped = _groupByDate(transactions);
-                final dateKeys = grouped.keys.toList();
+                // Group transactions
+                final grouped = _groupBy == 'date' ? _groupByDate(transactions) : _groupByCategory(transactions);
+                final groupKeys = grouped.keys.toList();
 
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -66,10 +103,10 @@ class TransactionListScreen extends ConsumerWidget {
                   },
                   child: ListView.builder(
                     padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: dateKeys.length,
+                    itemCount: groupKeys.length,
                     itemBuilder: (context, index) {
-                      final dateStr = dateKeys[index];
-                      final items = grouped[dateStr]!;
+                      final groupKey = groupKeys[index];
+                      final items = grouped[groupKey]!;
                       final dayTotal = items.fold<double>(
                           0, (sum, t) => sum + t.amount);
 
@@ -97,7 +134,7 @@ class TransactionListScreen extends ConsumerWidget {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      _formatDateHeader(dateStr),
+                                      _formatHeader(groupKey, _groupBy),
                                       style: theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w700,
                                         color: theme.colorScheme.onSurface,
@@ -173,10 +210,32 @@ class TransactionListScreen extends ConsumerWidget {
     return map;
   }
 
-  /// Format a YYYY-MM-DD string to a human-readable date.
-  String _formatDateHeader(String dateStr) {
+  Map<String, List<Transaction>> _groupByCategory(List<Transaction> transactions) {
+    final map = <String, List<Transaction>>{};
+    for (final txn in transactions) {
+      final key = txn.categoryName ?? 'Uncategorized';
+      map.putIfAbsent(key, () => []).add(txn);
+    }
+    
+    // Sort groups by total amount (descending)
+    final sortedKeys = map.keys.toList()..sort((a, b) {
+      final sumA = map[a]!.fold<double>(0, (sum, t) => sum + t.amount);
+      final sumB = map[b]!.fold<double>(0, (sum, t) => sum + t.amount);
+      return sumB.compareTo(sumA);
+    });
+    
+    final sortedMap = <String, List<Transaction>>{};
+    for (var k in sortedKeys) {
+      sortedMap[k] = map[k]!;
+    }
+    return sortedMap;
+  }
+
+  /// Format a group key to a human-readable header.
+  String _formatHeader(String key, String groupBy) {
+    if (groupBy == 'category') return key;
     try {
-      final date = DateTime.parse(dateStr);
+      final date = DateTime.parse(key);
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const months = [
         '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -184,7 +243,7 @@ class TransactionListScreen extends ConsumerWidget {
       ];
       return '${days[date.weekday - 1]}, ${date.day} ${months[date.month]}';
     } catch (_) {
-      return dateStr;
+      return key;
     }
   }
 }
