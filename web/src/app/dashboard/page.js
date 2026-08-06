@@ -414,8 +414,6 @@ export default function DashboardOverview() {
 
               </div>
 
-              </div>
-
             </motion.div>
           ) : (
             <div className="text-center text-sm font-medium text-[#e00] mt-10">Failed to load dashboard data.</div>
