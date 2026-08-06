@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../providers/providers.dart';
+import '../models/savings_goal.dart';
 import '../theme/app_theme.dart';
 
 class SavingsScreen extends ConsumerStatefulWidget {
@@ -169,6 +170,172 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
     );
   }
 
+  Future<void> _showDistributeSavingsModal(double netBalance, List<SavingsGoal> goals) async {
+    final activeGoals = goals.where((g) => g.currentAmount < g.targetAmount).toList();
+    if (activeGoals.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No active savings goals found.')));
+      }
+      return;
+    }
+
+    final controllers = <int, TextEditingController>{};
+    for (var g in activeGoals) {
+      controllers[g.id!] = TextEditingController();
+    }
+
+    bool isAutoSplit = false;
+    try {
+      final user = await ref.read(apiClientProvider).getUser();
+      isAutoSplit = user['auto_split_savings'] == true;
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            double allocated = 0;
+            for (var c in controllers.values) {
+              allocated += double.tryParse(c.text) ?? 0;
+            }
+            final remaining = netBalance - allocated;
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.savings, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  const Text('Distribute Savings'),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Remaining:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('₹${remaining.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () {
+                        final split = (netBalance / activeGoals.length).floorToDouble();
+                        setState(() {
+                          for (var c in controllers.values) {
+                            c.text = split.toStringAsFixed(0);
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.call_split),
+                      label: const Text('Auto-Split Equally'),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: activeGoals.length,
+                        itemBuilder: (ctx, i) {
+                          final g = activeGoals[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Expanded(child: Text(g.name, overflow: TextOverflow.ellipsis)),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: controllers[g.id!],
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    decoration: const InputDecoration(
+                                      prefixText: '₹',
+                                      isDense: true,
+                                    ),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Auto-Split Every Month', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text('Automatically split your net balance equally on the last day of every month.', 
+                                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: isAutoSplit,
+                            onChanged: (val) async {
+                              setState(() => isAutoSplit = val);
+                              try {
+                                await ref.read(apiClientProvider).updateAutoSplit(val);
+                              } catch (e) {
+                                setState(() => isAutoSplit = !val);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                FilledButton(
+                  onPressed: remaining < 0 || allocated <= 0 ? null : () async {
+                    Navigator.pop(ctx);
+                    for (var g in activeGoals) {
+                      final amount = double.tryParse(controllers[g.id!]!.text) ?? 0;
+                      if (amount > 0) {
+                        await ref.read(apiClientProvider).addFundsToGoal(g.id!, g.currentAmount + amount);
+                      }
+                    }
+                    ref.invalidate(savingsProvider);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Savings distributed successfully!')));
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final savingsAsync = ref.watch(savingsProvider);
@@ -200,9 +367,27 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('Net Monthly Savings', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                          Text(
-                            '₹${netSavings.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                          Row(
+                            children: [
+                              Text(
+                                '₹${netSavings.toStringAsFixed(0)}',
+                                style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                              ),
+                              const Spacer(),
+                              savingsAsync.when(
+                                data: (goals) => ElevatedButton.icon(
+                                  onPressed: () => _showDistributeSavingsModal(netSavings, goals),
+                                  icon: const Icon(Icons.call_split, size: 16),
+                                  label: const Text('Auto-Split'),
+                                  style: ElevatedButton.styleFrom(
+                                    foregroundColor: AppTheme.primary,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
+                                loading: () => const SizedBox.shrink(),
+                                error: (_, __) => const SizedBox.shrink(),
+                              ),
+                            ],
                           ),
                           const Text('Actual Cash Flow (Income - Expenses)', style: TextStyle(color: Colors.white70, fontSize: 12)),
                         ],
