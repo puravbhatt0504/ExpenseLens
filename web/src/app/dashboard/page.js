@@ -236,7 +236,7 @@ export default function DashboardOverview() {
             >
               
               {/* TOP METRICS ROW */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-4 uppercase tracking-wider">
                     <Scale size={16} className="text-[#0284c7]" /> Net Balance
@@ -254,7 +254,10 @@ export default function DashboardOverview() {
                     {formatCurrency(summary.totalIncome)}
                   </h2>
                 </motion.div>
+              </div>
 
+              {/* SPEND & SAVINGS ROW */}
+              <div className={`grid grid-cols-1 ${!loadingSavings && savings && savings.length > 0 ? 'md:grid-cols-2' : ''} gap-6`}>
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-4 uppercase tracking-wider">
                     <TrendingDown size={16} className="text-[#ef4444]" /> Total Spend
@@ -282,72 +285,83 @@ export default function DashboardOverview() {
                     </div>
                   )}
                 </motion.div>
-              </div>
 
-              {/* SAVINGS ROW */}
-              {!loadingSavings && savings && savings.length > 0 && (
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
-                      <PiggyBank size={16} className="text-[#0284c7]" /> Active Savings Goals
+                {!loadingSavings && savings && savings.length > 0 && (
+                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
+                        <PiggyBank size={16} className="text-[#0284c7]" /> Savings
+                      </div>
+                      {netBalance > 0 && (
+                        <button 
+                          onClick={() => setIsDistributeOpen(true)}
+                          className="bg-[#0284c7] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 text-xs hover:bg-[#0369a1] transition-colors"
+                        >
+                          <Split size={14} /> Split
+                        </button>
+                      )}
                     </div>
-                    {netBalance > 0 && (
-                      <button 
-                        onClick={() => setIsDistributeOpen(true)}
-                        className="bg-[#0284c7] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 text-xs hover:bg-[#0369a1] transition-colors"
-                      >
-                        <Split size={14} /> Distribute Savings
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {savings.map(goal => {
-                      const progress = Math.min(100, (goal.current_amount / goal.target_amount) * 100);
-                      const isComplete = progress >= 100;
-                      return (
-                        <div key={goal.id} className="p-4 rounded-xl border border-border/50 bg-surface/30 flex flex-col gap-3 hover:bg-surface transition-colors cursor-pointer" onClick={() => router.push('/dashboard/savings')}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{goal.icon || '🎯'}</span>
-                            <span className="font-bold text-foreground truncate">{goal.name}</span>
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-end mb-1">
-                              <span className={`font-extrabold ${isComplete ? 'text-[#10b981]' : 'text-[#0284c7]'}`}>{formatCurrency(goal.current_amount)}</span>
-                              <span className="text-xs font-semibold text-text-muted">/ {formatCurrency(goal.target_amount)}</span>
+                    <div className="flex flex-col gap-4">
+                      {savings.slice(0, 3).map(goal => {
+                        const progress = Math.min(100, (goal.current_amount / goal.target_amount) * 100);
+                        const isComplete = progress >= 100;
+                        return (
+                          <div key={goal.id} className="flex flex-col gap-1.5 cursor-pointer" onClick={() => router.push('/dashboard/savings')}>
+                            <div className="flex justify-between items-end">
+                              <span className="font-extrabold text-foreground text-sm truncate flex-1">{goal.name}</span>
+                              <span className={`font-bold text-sm ${isComplete ? 'text-[#10b981]' : 'text-[#0284c7]'}`}>{progress.toFixed(0)}%</span>
                             </div>
-                            <div className="h-2 w-full bg-border/50 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-border/50 rounded-full overflow-hidden">
                               <div className={`h-full transition-all duration-500 ${isComplete ? 'bg-[#10b981]' : 'bg-[#0284c7]'}`} style={{ width: `${progress}%` }} />
                             </div>
                           </div>
+                        );
+                      })}
+                      {savings.length > 3 && (
+                        <div className="text-center text-xs text-text-muted mt-2">
+                          + {savings.length - 3} more
                         </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
 
               {/* CHARTS ROW */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
-                {/* Income vs Spend Bar Chart */}
+                {/* Income Utilization Donut Chart */}
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col min-h-[350px]">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-6 uppercase tracking-wider">
-                    <Wallet size={16} /> Cash Flow
+                    <Wallet size={16} /> Income Utilization
                   </div>
-                  <div className="flex-1 w-full">
+                  <div className="flex-1 w-full relative flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontWeight: 'bold' }} />
-                        <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
-                        <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
-                        <Bar dataKey="amount" radius={[6, 6, 0, 0]} maxBarSize={60}>
-                          {barChartData.map((entry, index) => (
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Spent', amount: summary.total > 0 ? summary.total : 0.001, fill: '#ef4444' },
+                            ...(summary.totalIncome > summary.total ? [{ name: 'Remaining', amount: summary.totalIncome - summary.total, fill: '#10b981' }] : [])
+                          ]}
+                          dataKey="amount"
+                          cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2} stroke="none"
+                        >
+                          {[
+                            { name: 'Spent', amount: summary.total > 0 ? summary.total : 0.001, fill: '#ef4444' },
+                            ...(summary.totalIncome > summary.total ? [{ name: 'Remaining', amount: summary.totalIncome - summary.total, fill: '#10b981' }] : [])
+                          ].map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                           ))}
-                        </Bar>
-                      </BarChart>
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
                     </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-sm font-medium text-text-muted">Spent</span>
+                      <span className={`text-3xl font-extrabold ${summary.total > summary.totalIncome ? 'text-[#ef4444]' : 'text-foreground'}`}>
+                        {summary.totalIncome > 0 ? ((summary.total / summary.totalIncome) * 100).toFixed(1) : 0}%
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
 
