@@ -194,22 +194,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                if (allocated > 0)
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                 FilledButton(
-                  onPressed: remaining < 0 || allocated <= 0 ? null : () async {
+                  onPressed: remaining < 0 ? null : () async {
                     Navigator.pop(ctx);
-                    for (var g in activeGoals) {
-                      final amount = double.tryParse(controllers[g.id!]!.text) ?? 0;
-                      if (amount > 0) {
-                        await ref.read(apiClientProvider).addFundsToGoal(g.id!, g.currentAmount + amount);
+                    if (allocated > 0) {
+                      for (var g in activeGoals) {
+                        final amount = double.tryParse(controllers[g.id!]!.text) ?? 0;
+                        if (amount > 0) {
+                          await ref.read(apiClientProvider).addFundsToGoal(g.id!, g.currentAmount + amount);
+                        }
+                      }
+                      ref.invalidate(savingsProvider);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Savings distributed successfully!')));
                       }
                     }
-                    ref.invalidate(savingsProvider);
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Savings distributed successfully!')));
-                    }
                   },
-                  child: const Text('Confirm'),
+                  child: Text(allocated > 0 ? 'Distribute' : 'Done'),
                 ),
               ],
             );
