@@ -314,144 +314,140 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildMetricCard(
-                          title: 'Spend',
-                          amount: '₹${summary.total.toStringAsFixed(0)}',
-                          color: Colors.red,
-                          icon: Icons.trending_down,
-                          budgetInfo: summary.totalBudget != null ? {
-                            'total': summary.totalBudget!,
-                            'spent': summary.total,
-                          } : null,
-                        ).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
-
-                        const SizedBox(height: 32),
-                        
-                        // Active Savings Goals
-                        savingsAsync.when(
-                          data: (savings) {
-                            if (savings.isEmpty) return const SizedBox.shrink();
-                            
-                            return Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: theme.cardTheme.color ?? theme.colorScheme.surface,
-                                borderRadius: BorderRadius.circular(32),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Row(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildMetricCard(
+                                title: 'Spend',
+                                amount: '₹${summary.total.toStringAsFixed(0)}',
+                                color: Colors.red,
+                                icon: Icons.trending_down,
+                                budgetInfo: summary.totalBudget != null ? {
+                                  'total': summary.totalBudget!,
+                                  'spent': summary.total,
+                                } : null,
+                              ).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: savingsAsync.maybeWhen(
+                                data: (savings) {
+                                  if (savings.isEmpty) return const SizedBox.shrink();
+                                  
+                                  return Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.02),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
-                                            const SizedBox(width: 8),
-                                            Flexible(
-                                              child: Text(
-                                                'Active Savings Goals',
-                                                style: theme.textTheme.titleLarge?.copyWith(
-                                                  fontWeight: FontWeight.w800,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.savings_outlined, color: theme.colorScheme.primary, size: 16),
+                                                  const SizedBox(width: 8),
+                                                  Flexible(
+                                                    child: Text(
+                                                      'SAVINGS',
+                                                      style: theme.textTheme.labelMedium?.copyWith(
+                                                        fontWeight: FontWeight.bold,
+                                                        letterSpacing: 1,
+                                                        color: theme.colorScheme.outline,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
+                                            if (netBalance > 0)
+                                              SizedBox(
+                                                height: 24,
+                                                child: FilledButton(
+                                                  onPressed: () => _showDistributeSavingsModal(netBalance, savings),
+                                                  style: FilledButton.styleFrom(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                                                  ),
+                                                  child: const Text('Split', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                                ),
+                                              ),
                                           ],
                                         ),
-                                      ),
-                                      if (netBalance > 0)
-                                        FilledButton.icon(
-                                          onPressed: () => _showDistributeSavingsModal(netBalance, savings),
-                                          icon: const Icon(Icons.call_split, size: 16),
-                                          label: const Text('Distribute'),
-                                          style: FilledButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                            textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ...savings.map((goal) {
-                                    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
-                                    final isComplete = progress >= 1.0;
-                                    
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  goal.name,
-                                                  style: theme.textTheme.titleMedium?.copyWith(
-                                                    fontWeight: FontWeight.w700,
+                                        const SizedBox(height: 16),
+                                        ...savings.take(3).map((goal) {
+                                          final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
+                                          final isComplete = progress >= 1.0;
+                                          
+                                          return Padding(
+                                            padding: const EdgeInsets.only(bottom: 12),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        goal.name,
+                                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                                          fontWeight: FontWeight.w700,
+                                                        ),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '${(progress * 100).toStringAsFixed(0)}%',
+                                                      style: theme.textTheme.labelSmall?.copyWith(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: isComplete ? Colors.green : theme.colorScheme.primary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 6),
+                                                ClipRRect(
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  child: LinearProgressIndicator(
+                                                    value: progress,
+                                                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                                      isComplete ? Colors.green : theme.colorScheme.primary,
+                                                    ),
+                                                    minHeight: 4,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
                                                 ),
-                                              ),
-                                              Text(
-                                                '${(progress * 100).toStringAsFixed(1)}%',
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '₹${goal.currentAmount.toStringAsFixed(0)}',
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
-                                                ),
-                                              ),
-                                              Text(
-                                                '/ ₹${goal.targetAmount.toStringAsFixed(0)}',
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  color: theme.colorScheme.outline,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
-                                            child: LinearProgressIndicator(
-                                              value: progress,
-                                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                                              valueColor: AlwaysStoppedAnimation<Color>(
-                                                isComplete ? Colors.green : theme.colorScheme.primary,
-                                              ),
-                                              minHeight: 6,
+                                              ],
+                                            ),
+                                          );
+                                        }),
+                                        if (savings.length > 3)
+                                          Center(
+                                            child: Text('+ ${savings.length - 3} more', 
+                                              style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline)
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                                ],
+                                      ],
+                                    ),
+                                  ).animate().fade(duration: 500.ms, delay: 300.ms).slideY(begin: 0.2, end: 0);
+                                },
+                                orElse: () => const SizedBox.shrink(),
                               ),
-                            ).animate().fade(duration: 500.ms, delay: 300.ms).slideY(begin: 0.2, end: 0);
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
+                            ),
+                          ],
                         ),
                         
                         const SizedBox(height: 32),
