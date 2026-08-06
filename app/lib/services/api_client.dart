@@ -32,8 +32,8 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Skip token check for auth and public routes
-          if (options.path.startsWith('/auth') || options.path.startsWith('/categories')) {
+          // Skip token check for login and public routes
+          if (options.path == '/auth/login' || options.path.startsWith('/categories')) {
             return handler.next(options);
           }
           
