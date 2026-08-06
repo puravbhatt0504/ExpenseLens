@@ -351,17 +351,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Active Savings Goals',
-                                            style: theme.textTheme.titleLarge?.copyWith(
-                                              fontWeight: FontWeight.w800,
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                'Active Savings Goals',
+                                                style: theme.textTheme.titleLarge?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       if (netBalance > 0)
                                         FilledButton.icon(
