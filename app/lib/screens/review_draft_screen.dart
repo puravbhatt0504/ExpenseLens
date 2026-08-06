@@ -80,6 +80,7 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_isSubmitting) return;
 
     setState(() => _isSubmitting = true);
 

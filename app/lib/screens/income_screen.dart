@@ -21,13 +21,14 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
   final _noteController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String _selectedPaymentMethod = 'Bank Transfer';
-  bool _isSubmitting = false;
+  final _isSubmitting = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
     _amountController.dispose();
     _sourceController.dispose();
     _noteController.dispose();
+    _isSubmitting.dispose();
     super.dispose();
   }
 
@@ -42,61 +43,68 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
           right: 16,
           top: 16,
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Add Income', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  prefixText: '₹ ',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Add Income', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _amountController,
+                  decoration: const InputDecoration(
+                    labelText: 'Amount',
+                    prefixText: '₹ ',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.currency_rupee),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  validator: (val) => (val == null || double.tryParse(val) == null) ? 'Invalid amount' : null,
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (val) => (val == null || double.tryParse(val) == null) ? 'Invalid amount' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _sourceController,
-                decoration: const InputDecoration(
-                  labelText: 'Source (e.g. Salary, Freelance)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.business_center),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _sourceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Source (e.g. Salary, Freelance)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.business_center),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (Optional)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.note),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Note (Optional)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.note),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: _selectedPaymentMethod,
-                decoration: const InputDecoration(
-                  labelText: 'Payment Method',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.payment),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedPaymentMethod,
+                  decoration: const InputDecoration(
+                    labelText: 'Payment Method',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.payment),
+                  ),
+                  items: ['Bank Transfer', 'UPI', 'Cash', 'Cheque'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (val) => setState(() => _selectedPaymentMethod = val!),
                 ),
-                items: ['Bank Transfer', 'UPI', 'Cash', 'Cheque'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                onChanged: (val) => setState(() => _selectedPaymentMethod = val!),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Save Income'),
-              ),
-              const SizedBox(height: 16),
-            ],
+                const SizedBox(height: 16),
+                ValueListenableBuilder<bool>(
+                  valueListenable: _isSubmitting,
+                  builder: (context, isSubmitting, child) {
+                    return FilledButton(
+                      onPressed: isSubmitting ? null : _submit,
+                      child: isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Save Income'),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -105,7 +113,8 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isSubmitting = true);
+    if (_isSubmitting.value) return; // Prevent double submission
+    _isSubmitting.value = true;
     
     try {
       final api = ref.read(apiClientProvider);
@@ -120,8 +129,17 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
       ref.invalidate(incomesProvider);
       ref.invalidate(summaryProvider);
       if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) _isSubmitting.value = false;
     }
   }
 
@@ -152,21 +170,69 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
                     itemCount: incomes.length,
                     itemBuilder: (context, index) {
                       final income = incomes[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.green.withValues(alpha: 0.1),
-                            child: const Icon(Icons.trending_up, color: Colors.green),
-                          ),
-                          title: Text(income.source ?? 'Income'),
-                          subtitle: Text(income.note ?? income.paymentMethod ?? ''),
-                          trailing: Text(
-                            '+₹${income.amount.toStringAsFixed(0)}',
-                            style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
+                      return Dismissible(
+                        key: ValueKey(income.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          color: Theme.of(context).colorScheme.error,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
                         ),
-                      ).animate().fade().slideX();
+                        confirmDismiss: (direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Delete Income?'),
+                              content: const Text('Are you sure you want to delete this income entry?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          try {
+                            if (income.id != null) {
+                              await ref.read(apiClientProvider).deleteIncome(income.id!);
+                              ref.invalidate(incomesProvider);
+                              ref.invalidate(summaryProvider);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Income deleted')),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed to delete: $e')),
+                              );
+                              ref.invalidate(incomesProvider);
+                            }
+                          }
+                        },
+                        child: Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.green.withValues(alpha: 0.1),
+                              child: const Icon(Icons.trending_up, color: Colors.green),
+                            ),
+                            title: Text(income.source ?? 'Income'),
+                            subtitle: Text(income.note ?? income.paymentMethod ?? ''),
+                            trailing: Text(
+                              '+₹${income.amount.toStringAsFixed(0)}',
+                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ),
+                        ).animate().fade().slideX(),
+                      );
                     },
                   ),
                 );

@@ -35,6 +35,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
       setError('Amount and Date are required.');
       return;
     }
+    if (loading) return;
     
     setLoading(true);
     setError('');

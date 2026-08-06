@@ -11,8 +11,11 @@ import api from '@/lib/api';
 export default function Login() {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    if (loading) return;
+    setLoading(true);
     try {
       const idToken = credentialResponse.credential;
       
@@ -29,6 +32,8 @@ export default function Login() {
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.error || 'Authentication failed');
+    } finally {
+      setLoading(false);
     }
   };
 

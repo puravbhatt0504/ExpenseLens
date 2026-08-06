@@ -40,6 +40,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   }
 
   Future<void> _saveBudgets() async {
+    if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
       final Map<int, double?> budgetsToSave = {};

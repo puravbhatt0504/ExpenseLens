@@ -70,6 +70,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedCategoryId == null) return;
+    if (_isSubmitting) return;
 
     setState(() => _isSubmitting = true);
 

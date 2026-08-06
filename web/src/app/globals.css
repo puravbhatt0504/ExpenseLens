@@ -33,10 +33,16 @@
     display: none;
   }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
+  /* Hide scrollbar for IE and Edge */
   * {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; 
+  }
+
+  /* Hide scrollbar for Firefox (wrapped in @supports to prevent IDE compatibility warnings) */
+  @supports (scrollbar-width: none) {
+    * {
+      scrollbar-width: none;
+    }
   }
 }
 

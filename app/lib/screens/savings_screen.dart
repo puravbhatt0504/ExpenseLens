@@ -17,12 +17,13 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
   DateTime? _selectedTargetDate;
-  bool _isSubmitting = false;
+  final _isSubmitting = ValueNotifier<bool>(false);
 
   @override
   void dispose() {
     _nameController.dispose();
     _amountController.dispose();
+    _isSubmitting.dispose();
     super.dispose();
   }
 
@@ -37,11 +38,12 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
           right: 16,
           top: 16,
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text('Create Savings Goal', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
@@ -79,21 +81,28 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _submitNewGoal,
-                child: _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Create Goal'),
+              ValueListenableBuilder<bool>(
+                valueListenable: _isSubmitting,
+                builder: (context, isSubmitting, child) {
+                  return FilledButton(
+                    onPressed: isSubmitting ? null : _submitNewGoal,
+                    child: isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Create Goal'),
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _submitNewGoal() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isSubmitting = true);
+    if (_isSubmitting.value) return; // Prevent double submission
+    _isSubmitting.value = true;
     try {
       final api = ref.read(apiClientProvider);
       await api.createSavingsGoal(
@@ -105,8 +114,17 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
       );
       ref.invalidate(savingsProvider);
       if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) _isSubmitting.value = false;
     }
   }
 
@@ -127,10 +145,21 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
             onPressed: () async {
               final val = double.tryParse(fundController.text);
               if (val != null && val > 0) {
-                final api = ref.read(apiClientProvider);
-                await api.addFundsToGoal(goalId, currentAmount + val);
-                ref.invalidate(savingsProvider);
-                if (mounted) Navigator.pop(context);
+                try {
+                  final api = ref.read(apiClientProvider);
+                  await api.addFundsToGoal(goalId, currentAmount + val);
+                  ref.invalidate(savingsProvider);
+                  if (mounted) Navigator.pop(context);
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString().replaceAll('Exception: ', '')),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               }
             },
             child: const Text('Add'),
@@ -202,52 +231,99 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                 final goal = goals[index];
                 final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
                 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(goal.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                                if (goal.targetDate != null)
-                                  Text('Target: ${DateFormat('MMM yyyy').format(DateTime.parse(goal.targetDate!))}', 
-                                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                              ],
-                            ),
-                            Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 12,
-                            backgroundColor: Colors.grey[200],
-                            valueColor: AlwaysStoppedAnimation(progress >= 1.0 ? Colors.green : Colors.blue),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _showAddFundsModal(goal.id!, goal.currentAmount),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add Funds'),
-                          ),
-                        ),
-                      ],
-                    ),
+                return Dismissible(
+                  key: ValueKey(goal.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Theme.of(context).colorScheme.error,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
                   ),
-                ).animate().fade().slideY(begin: 0.1, end: 0);
+                  confirmDismiss: (direction) async {
+                    return await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Savings Goal?'),
+                        content: const Text('Are you sure you want to delete this savings goal?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  onDismissed: (direction) async {
+                    try {
+                      if (goal.id != null) {
+                        await ref.read(apiClientProvider).deleteSavingsGoal(goal.id!);
+                        ref.invalidate(savingsProvider);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Savings goal deleted')),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to delete: $e')),
+                        );
+                        ref.invalidate(savingsProvider);
+                      }
+                    }
+                  },
+                  child: Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(goal.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                                  if (goal.targetDate != null)
+                                    Text('Target: ${DateFormat('MMM yyyy').format(DateTime.parse(goal.targetDate!))}', 
+                                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                                ],
+                              ),
+                              Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 12,
+                              backgroundColor: Colors.grey[200],
+                              valueColor: AlwaysStoppedAnimation(progress >= 1.0 ? Colors.green : Colors.blue),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showAddFundsModal(goal.id!, goal.currentAmount),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add Funds'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ).animate().fade().slideY(begin: 0.1, end: 0),
+                );
               },
             ),
           );

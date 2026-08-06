@@ -14,7 +14,8 @@ import {
   Gift,
   DollarSign,
   TrendingUp,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
@@ -33,6 +34,7 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount || !date) return setError('Amount and Date are required.');
+    if (loading) return;
     
     setLoading(true);
     setError('');
@@ -180,6 +182,18 @@ export default function IncomePage() {
 
   const totalIncome = incomes ? incomes.reduce((acc, curr) => acc + curr.amount, 0) : 0;
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this income entry?')) {
+      try {
+        await api.delete(`/incomes/${id}`);
+        mutate();
+      } catch (err) {
+        console.error('Failed to delete income:', err);
+        alert('Failed to delete income.');
+      }
+    }
+  };
+
   const getSourceIcon = (source) => {
     switch(source) {
       case 'Salary': return <Briefcase size={18} />;
@@ -280,8 +294,16 @@ export default function IncomePage() {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right font-extrabold text-lg text-[#2e7d32]">
-                          +{formatCurrency(inc.amount)}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right font-extrabold text-lg text-[#2e7d32]">
+                            +{formatCurrency(inc.amount)}
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDelete(inc.id); }}
+                            className="p-2 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-full transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </motion.li>
                     );

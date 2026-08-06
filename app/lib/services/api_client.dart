@@ -247,6 +247,10 @@ class ApiClient {
     return Income.fromJson(response.data);
   }
 
+  Future<void> deleteIncome(int id) async {
+    await _dio.delete('/incomes/$id');
+  }
+
   // ---------------------------------------------------------------------------
   // Savings
   // ---------------------------------------------------------------------------
@@ -277,5 +281,9 @@ class ApiClient {
       'current_amount': currentAmount,
     });
     return SavingsGoal.fromJson(response.data);
+  }
+
+  Future<void> deleteSavingsGoal(int id) async {
+    await _dio.delete('/savings/$id');
   }
 }

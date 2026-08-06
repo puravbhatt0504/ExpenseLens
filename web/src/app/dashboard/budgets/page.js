@@ -51,6 +51,7 @@ export default function BudgetsPage() {
   };
 
   const saveBudgets = async () => {
+    if (saving) return;
     setSaving(true);
     setSuccess(false);
     

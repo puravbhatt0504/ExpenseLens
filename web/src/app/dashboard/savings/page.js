@@ -11,7 +11,8 @@ import {
   Target,
   X,
   ArrowRight,
-  Wallet
+  Wallet,
+  Trash2
 } from 'lucide-react';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
@@ -28,6 +29,7 @@ const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !targetAmount) return setError('Name and Target Amount are required.');
+    if (loading) return;
     
     setLoading(true);
     setError('');
@@ -129,6 +131,7 @@ const AddFundsModal = ({ isOpen, onClose, goal, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!amount) return;
+    if (loading) return;
     setLoading(true);
     try {
       await api.patch(`/savings/${goal.id}`, {
@@ -203,6 +206,18 @@ export default function SavingsPage() {
 
   const { data: summary } = useSWR(`/summary?month=${currentMonth}`, fetcher);
 
+  const handleDeleteGoal = async (id) => {
+    if (window.confirm('Are you sure you want to delete this savings goal?')) {
+      try {
+        await api.delete(`/savings/${id}`);
+        mutate();
+      } catch (err) {
+        console.error('Failed to delete savings goal:', err);
+        alert('Failed to delete savings goal.');
+      }
+    }
+  };
+
   const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
@@ -276,6 +291,12 @@ export default function SavingsPage() {
                         ACHIEVED
                       </div>
                     )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteGoal(goal.id); }}
+                      className="absolute top-3 right-3 p-2 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-full transition-colors z-10"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="text-3xl">{goal.icon || '🎯'}</div>
                       <div>

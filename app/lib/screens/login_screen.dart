@@ -24,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _handleSignIn() async {
+    if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
       final GoogleSignInAccount? account = await _googleSignIn.signIn();
