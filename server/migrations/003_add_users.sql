@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Add user_id to transactions. 
 -- For existing records (if any), we allow NULL temporarily, but we should make it NOT NULL in production if all rows have a user.
 ALTER TABLE transactions 
-  ADD COLUMN user_id INT REFERENCES users(id) ON DELETE CASCADE;
+  ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE CASCADE;
 
 -- Note: Since this is likely a dev environment, we can leave user_id as nullable 
 -- to not break existing rows, or you can delete all transactions if you want a clean slate.
