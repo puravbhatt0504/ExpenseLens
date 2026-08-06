@@ -95,8 +95,8 @@ class _ScreenshotUploadScreenState
       appBar: AppBar(
         title: const Text('Upload Screenshot'),
       ),
-      body: Center(
-        child: Padding(
+      body: SafeArea(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
