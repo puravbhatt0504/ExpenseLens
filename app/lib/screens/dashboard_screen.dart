@@ -67,6 +67,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       controllers[g.id!] = TextEditingController();
     }
 
+    bool isAutoSplit = false;
+    try {
+      final user = await ref.read(apiClientProvider).getUser();
+      isAutoSplit = user['auto_split_savings'] == true;
+    } catch (_) {}
+
+    if (!mounted) return;
+
     await showDialog(
       context: context,
       builder: (ctx) {
@@ -146,6 +154,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           );
                         },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Auto-Split Every Month', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text('Automatically split your net balance equally on the last day of every month.', 
+                                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.outline),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch(
+                            value: isAutoSplit,
+                            onChanged: (val) async {
+                              setState(() => isAutoSplit = val);
+                              try {
+                                await ref.read(apiClientProvider).updateAutoSplit(val);
+                              } catch (e) {
+                                setState(() => isAutoSplit = !val);
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ],

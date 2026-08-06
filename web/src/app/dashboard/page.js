@@ -25,6 +25,19 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
   const [allocations, setAllocations] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const { data: userData, mutate: mutateUser } = useSWR('/auth/me', fetcher);
+  const autoSplitEnabled = userData?.user?.auto_split_savings || false;
+
+  const toggleAutoSplit = async () => {
+    try {
+      await api.patch('/auth/me', { auto_split_savings: !autoSplitEnabled });
+      mutateUser();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update setting.");
+    }
+  };
+
   useEffect(() => {
     if (isOpen) setAllocations({});
   }, [isOpen]);
@@ -104,6 +117,21 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
               ))
             )}
           </div>
+
+          <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border mt-2">
+            <div>
+              <p className="font-bold text-sm text-foreground">Auto-Split Every Month</p>
+              <p className="text-xs text-text-muted">Automatically split your net balance equally on the last day of every month.</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleAutoSplit}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${autoSplitEnabled ? 'bg-[#10b981]' : 'bg-gray-300'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoSplitEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+
           <div className="flex justify-end pt-4 border-t border-border mt-2">
             <button type="submit" disabled={loading || remaining < 0 || totalAllocated <= 0} className="bg-[#0284c7] text-white px-6 py-2.5 rounded-lg font-bold disabled:opacity-50 transition-opacity">
               {loading ? 'Saving...' : 'Confirm Distribution'}

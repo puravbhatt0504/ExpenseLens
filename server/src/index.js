@@ -13,6 +13,7 @@ const summaryRouter = require('./routes/summary');
 const parserRouter = require('./routes/parser');
 const reportRouter = require('./routes/report');
 const { requireAuth } = require('./middleware/auth');
+const { startCronJobs } = require('./jobs/cron');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -49,4 +50,5 @@ app.get('/', (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`ExpenseLens API running on http://localhost:${PORT}`);
+  startCronJobs();
 });

@@ -82,6 +82,15 @@ class ApiClient {
     await _storage.delete(key: 'auth_token');
   }
 
+  Future<Map<String, dynamic>> getUser() async {
+    final res = await _dio.get('/auth/me');
+    return res.data['user'] as Map<String, dynamic>;
+  }
+
+  Future<void> updateAutoSplit(bool val) async {
+    await _dio.patch('/auth/me', data: {'auto_split_savings': val});
+  }
+
   // ---------------------------------------------------------------------------
   // Categories
   // ---------------------------------------------------------------------------
