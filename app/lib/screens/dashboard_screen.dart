@@ -403,15 +403,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                     Expanded(
                                                       child: Text(
                                                         goal.name,
-                                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                                          fontWeight: FontWeight.w700,
+                                                        style: theme.textTheme.titleMedium?.copyWith(
+                                                          fontWeight: FontWeight.w800,
                                                         ),
                                                         overflow: TextOverflow.ellipsis,
                                                       ),
                                                     ),
                                                     Text(
                                                       '${(progress * 100).toStringAsFixed(0)}%',
-                                                      style: theme.textTheme.labelSmall?.copyWith(
+                                                      style: theme.textTheme.bodyMedium?.copyWith(
                                                         fontWeight: FontWeight.bold,
                                                         color: isComplete ? Colors.green : theme.colorScheme.primary,
                                                       ),
@@ -471,7 +471,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Cash Flow',
+                                  'Income Utilization',
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w800,
                                   ),
@@ -479,58 +479,50 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 const SizedBox(height: 32),
                                 SizedBox(
                                   height: 250,
-                                  child: BarChart(
-                                    BarChartData(
-                                      alignment: BarChartAlignment.spaceAround,
-                                      maxY: (summary.totalIncome > summary.total ? summary.totalIncome : summary.total) * 1.2,
-                                      barTouchData: BarTouchData(enabled: true),
-                                      titlesData: FlTitlesData(
-                                        show: true,
-                                        bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: true,
-                                            getTitlesWidget: (value, meta) {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(top: 8.0),
-                                                child: Text(
-                                                  value == 0 ? 'Income' : 'Spend',
-                                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                      ),
-                                      gridData: const FlGridData(show: false),
-                                      borderData: FlBorderData(show: false),
-                                      barGroups: [
-                                        BarChartGroupData(
-                                          x: 0,
-                                          barRods: [
-                                            BarChartRodData(
-                                              toY: summary.totalIncome,
-                                              color: Colors.green,
-                                              width: 40,
-                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                                            ),
-                                          ],
-                                        ),
-                                        BarChartGroupData(
-                                          x: 1,
-                                          barRods: [
-                                            BarChartRodData(
-                                              toY: summary.total,
+                                  child: Stack(
+                                    children: [
+                                      PieChart(
+                                        PieChartData(
+                                          sectionsSpace: 4,
+                                          centerSpaceRadius: 80,
+                                          sections: [
+                                            PieChartSectionData(
                                               color: Colors.red,
-                                              width: 40,
-                                              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                              value: summary.total > 0 ? summary.total : 0.001,
+                                              title: '',
+                                              radius: 35,
+                                            ),
+                                            if (summary.totalIncome > summary.total)
+                                              PieChartSectionData(
+                                                color: Colors.green,
+                                                value: summary.totalIncome - summary.total,
+                                                title: '',
+                                                radius: 35,
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Spent',
+                                              style: theme.textTheme.bodyMedium?.copyWith(
+                                                color: theme.colorScheme.outline,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${summary.totalIncome > 0 ? ((summary.total / summary.totalIncome) * 100).toStringAsFixed(1) : 0}%',
+                                              style: theme.textTheme.headlineSmall?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: summary.total > summary.totalIncome ? Colors.red : theme.colorScheme.onSurface,
+                                              ),
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
