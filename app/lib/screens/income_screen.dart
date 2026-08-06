@@ -226,9 +226,55 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
                             ),
                             title: Text(income.source ?? 'Income'),
                             subtitle: Text(income.note ?? income.paymentMethod ?? ''),
-                            trailing: Text(
-                              '+₹${income.amount.toStringAsFixed(0)}',
-                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '+₹${income.amount.toStringAsFixed(0)}',
+                                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                                  onPressed: () async {
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('Delete Income?'),
+                                        content: const Text('Are you sure you want to delete this income entry?'),
+                                        actions: [
+                                          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                          FilledButton(
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                            child: const Text('Delete'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      try {
+                                        if (income.id != null) {
+                                          await ref.read(apiClientProvider).deleteIncome(income.id!);
+                                          ref.invalidate(incomesProvider);
+                                          ref.invalidate(summaryProvider);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text('Income deleted')),
+                                            );
+                                          }
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Failed to delete: $e')),
+                                          );
+                                          ref.invalidate(incomesProvider);
+                                        }
+                                      }
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
                           ),
                         ).animate().fade().slideX(),

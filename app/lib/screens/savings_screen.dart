@@ -297,7 +297,52 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                                         style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                                 ],
                               ),
-                              Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  IconButton(
+                                    icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error, size: 20),
+                                    onPressed: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (ctx) => AlertDialog(
+                                          title: const Text('Delete Savings Goal?'),
+                                          content: const Text('Are you sure you want to delete this savings goal?'),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                            FilledButton(
+                                              onPressed: () => Navigator.pop(ctx, true),
+                                              style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+                                              child: const Text('Delete'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true) {
+                                        try {
+                                          if (goal.id != null) {
+                                            await ref.read(apiClientProvider).deleteSavingsGoal(goal.id!);
+                                            ref.invalidate(savingsProvider);
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('Savings goal deleted')),
+                                              );
+                                            }
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Failed to delete: $e')),
+                                            );
+                                            ref.invalidate(savingsProvider);
+                                          }
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),

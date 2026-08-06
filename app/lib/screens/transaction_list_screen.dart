@@ -278,11 +278,57 @@ class _TransactionTile extends ConsumerWidget {
             color: theme.colorScheme.outline,
           ),
         ),
-        trailing: Text(
-          '₹${transaction.amount.toStringAsFixed(0)}',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '₹${transaction.amount.toStringAsFixed(0)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error, size: 20),
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Transaction?'),
+                    content: const Text('Are you sure you want to delete this transaction?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true) {
+                  try {
+                    if (transaction.id != null) {
+                      await ref.read(apiClientProvider).deleteTransaction(transaction.id!);
+                      ref.invalidate(transactionsProvider);
+                      ref.invalidate(summaryProvider);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Transaction deleted')),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete: $e')),
+                      );
+                      ref.invalidate(transactionsProvider);
+                    }
+                  }
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
