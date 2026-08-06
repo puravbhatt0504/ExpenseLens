@@ -102,7 +102,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
+                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
