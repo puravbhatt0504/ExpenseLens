@@ -13,11 +13,107 @@ import {
   Wallet,
   TrendingDown,
   Scale,
-  PiggyBank
+  PiggyBank,
+  X,
+  Split
 } from 'lucide-react';
 import useSWR from 'swr';
-import { fetcher } from '@/lib/api';
+import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
+
+const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSuccess }) => {
+  const [allocations, setAllocations] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setAllocations({});
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const activeGoals = savings?.filter(g => g.current_amount < g.target_amount) || [];
+  const totalAllocated = Object.values(allocations).reduce((sum, val) => sum + (Number(val) || 0), 0);
+  const remaining = netBalance - totalAllocated;
+
+  const handleAutoSplit = () => {
+    if (activeGoals.length === 0) return;
+    const splitAmount = Math.floor((netBalance / activeGoals.length) * 100) / 100;
+    const newAllocations = {};
+    activeGoals.forEach(g => newAllocations[g.id] = splitAmount);
+    setAllocations(newAllocations);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (remaining < 0) return alert("You cannot distribute more than your net balance.");
+    setLoading(true);
+    try {
+      const promises = Object.entries(allocations).map(([id, amount]) => {
+        const numAmount = Number(amount);
+        if (numAmount > 0) {
+          const goal = activeGoals.find(g => g.id === parseInt(id, 10));
+          return api.patch(`/savings/${id}`, { current_amount: goal.current_amount + numAmount });
+        }
+        return Promise.resolve();
+      });
+      await Promise.all(promises);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to distribute savings.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-center items-center">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-6 border-b border-border bg-surface/50 flex justify-between items-center">
+          <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
+            <PiggyBank size={20} className="text-[#0284c7]" /> Distribute Savings
+          </h2>
+          <button onClick={onClose} className="p-2 text-text-muted hover:bg-surface rounded-md"><X size={20} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-6">
+          <div className="flex justify-between items-center bg-[#e0f2fe] text-[#0284c7] p-4 rounded-xl">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider opacity-80">Remaining to Allocate</p>
+              <p className="text-2xl font-extrabold">₹{remaining.toFixed(2)}</p>
+            </div>
+            <button type="button" onClick={handleAutoSplit} className="bg-white text-[#0284c7] px-4 py-2 rounded-lg font-bold shadow-sm hover:shadow-md transition-shadow text-sm flex items-center gap-2">
+              <Split size={16} /> Auto-Split Equally
+            </button>
+          </div>
+          <div className="flex flex-col gap-4">
+            {activeGoals.length === 0 ? (
+              <p className="text-text-muted text-sm text-center">No active goals to fund.</p>
+            ) : (
+              activeGoals.map(goal => (
+                <div key={goal.id} className="flex justify-between items-center gap-4">
+                  <div className="flex-1 truncate">
+                    <p className="font-bold text-foreground text-sm truncate">{goal.icon || '🎯'} {goal.name}</p>
+                    <p className="text-xs text-text-muted">₹{goal.current_amount} / ₹{goal.target_amount}</p>
+                  </div>
+                  <div className="relative w-1/3">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold text-sm">₹</span>
+                    <input type="number" step="0.01" min="0" max={netBalance} className="w-full pl-7 pr-3 py-2 rounded-lg border border-border focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] outline-none transition-all font-semibold text-sm" value={allocations[goal.id] || ''} onChange={e => setAllocations({...allocations, [goal.id]: e.target.value})} placeholder="0.00" />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="flex justify-end pt-4 border-t border-border mt-2">
+            <button type="submit" disabled={loading || remaining < 0 || totalAllocated <= 0} className="bg-[#0284c7] text-white px-6 py-2.5 rounded-lg font-bold disabled:opacity-50 transition-opacity">
+              {loading ? 'Saving...' : 'Confirm Distribution'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default function DashboardOverview() {
   const router = useRouter();
@@ -36,7 +132,8 @@ export default function DashboardOverview() {
     }
   });
 
-  const { data: savings, isLoading: loadingSavings } = useSWR('/savings', fetcher);
+  const { data: savings, isLoading: loadingSavings, mutate: mutateSavings } = useSWR('/savings', fetcher);
+  const [isDistributeOpen, setIsDistributeOpen] = useState(false);
 
   const shiftMonth = (offset) => {
     const [year, month] = currentMonth.split('-').map(Number);
@@ -88,6 +185,14 @@ export default function DashboardOverview() {
           <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronRight size={16} /></button>
         </div>
       </header>
+
+      <DistributeSavingsModal 
+        isOpen={isDistributeOpen} 
+        onClose={() => setIsDistributeOpen(false)} 
+        netBalance={Math.max(0, netBalance)} 
+        savings={savings} 
+        onSuccess={mutateSavings} 
+      />
 
       <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[1200px] mx-auto">
@@ -150,6 +255,48 @@ export default function DashboardOverview() {
                   )}
                 </motion.div>
               </div>
+
+              {/* SAVINGS ROW */}
+              {!loadingSavings && savings && savings.length > 0 && (
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
+                      <PiggyBank size={16} className="text-[#0284c7]" /> Active Savings Goals
+                    </div>
+                    {netBalance > 0 && (
+                      <button 
+                        onClick={() => setIsDistributeOpen(true)}
+                        className="bg-[#0284c7] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 text-xs hover:bg-[#0369a1] transition-colors"
+                      >
+                        <Split size={14} /> Distribute Savings
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savings.map(goal => {
+                      const progress = Math.min(100, (goal.current_amount / goal.target_amount) * 100);
+                      const isComplete = progress >= 100;
+                      return (
+                        <div key={goal.id} className="p-4 rounded-xl border border-border/50 bg-surface/30 flex flex-col gap-3 hover:bg-surface transition-colors cursor-pointer" onClick={() => router.push('/dashboard/savings')}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{goal.icon || '🎯'}</span>
+                            <span className="font-bold text-foreground truncate">{goal.name}</span>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-end mb-1">
+                              <span className={`font-extrabold ${isComplete ? 'text-[#10b981]' : 'text-[#0284c7]'}`}>{formatCurrency(goal.current_amount)}</span>
+                              <span className="text-xs font-semibold text-text-muted">/ {formatCurrency(goal.target_amount)}</span>
+                            </div>
+                            <div className="h-2 w-full bg-border/50 rounded-full overflow-hidden">
+                              <div className={`h-full transition-all duration-500 ${isComplete ? 'bg-[#10b981]' : 'bg-[#0284c7]'}`} style={{ width: `${progress}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
 
               {/* CHARTS ROW */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -239,39 +386,7 @@ export default function DashboardOverview() {
 
               </div>
 
-              {/* SAVINGS ROW */}
-              {!loadingSavings && savings && savings.length > 0 && (
-                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
-                      <PiggyBank size={16} className="text-[#0284c7]" /> Active Savings Goals
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {savings.map(goal => {
-                      const progress = Math.min(100, (goal.current_amount / goal.target_amount) * 100);
-                      const isComplete = progress >= 100;
-                      return (
-                        <div key={goal.id} className="p-4 rounded-xl border border-border/50 bg-surface/30 flex flex-col gap-3 hover:bg-surface transition-colors cursor-pointer" onClick={() => router.push('/dashboard/savings')}>
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{goal.icon || '🎯'}</span>
-                            <span className="font-bold text-foreground truncate">{goal.name}</span>
-                          </div>
-                          <div>
-                            <div className="flex justify-between items-end mb-1">
-                              <span className={`font-extrabold ${isComplete ? 'text-[#10b981]' : 'text-[#0284c7]'}`}>{formatCurrency(goal.current_amount)}</span>
-                              <span className="text-xs font-semibold text-text-muted">/ {formatCurrency(goal.target_amount)}</span>
-                            </div>
-                            <div className="h-2 w-full bg-border/50 rounded-full overflow-hidden">
-                              <div className={`h-full transition-all duration-500 ${isComplete ? 'bg-[#10b981]' : 'bg-[#0284c7]'}`} style={{ width: `${progress}%` }} />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
+              </div>
 
             </motion.div>
           ) : (

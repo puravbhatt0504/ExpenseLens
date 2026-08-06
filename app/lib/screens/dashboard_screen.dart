@@ -58,6 +58,125 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
+  Future<void> _showDistributeSavingsModal(double netBalance, List<SavingsGoal> goals) async {
+    final activeGoals = goals.where((g) => g.currentAmount < g.targetAmount).toList();
+    if (activeGoals.isEmpty) return;
+
+    final controllers = <int, TextEditingController>{};
+    for (var g in activeGoals) {
+      controllers[g.id!] = TextEditingController();
+    }
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            double allocated = 0;
+            for (var c in controllers.values) {
+              allocated += double.tryParse(c.text) ?? 0;
+            }
+            final remaining = netBalance - allocated;
+
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.savings, color: Theme.of(context).colorScheme.primary),
+                  const SizedBox(width: 8),
+                  const Text('Distribute Savings'),
+                ],
+              ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Remaining:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text('₹${remaining.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () {
+                        final split = (netBalance / activeGoals.length).floorToDouble();
+                        setState(() {
+                          for (var c in controllers.values) {
+                            c.text = split.toStringAsFixed(0);
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.call_split),
+                      label: const Text('Auto-Split Equally'),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: activeGoals.length,
+                        itemBuilder: (ctx, i) {
+                          final g = activeGoals[i];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Expanded(child: Text(g.name, overflow: TextOverflow.ellipsis)),
+                                SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: controllers[g.id!],
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    decoration: const InputDecoration(
+                                      prefixText: '₹',
+                                      isDense: true,
+                                    ),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                FilledButton(
+                  onPressed: remaining < 0 || allocated <= 0 ? null : () async {
+                    Navigator.pop(ctx);
+                    for (var g in activeGoals) {
+                      final amount = double.tryParse(controllers[g.id!]!.text) ?? 0;
+                      if (amount > 0) {
+                        await ref.read(apiClientProvider).addFundsToGoal(g.id!, g.currentAmount + amount);
+                      }
+                    }
+                    ref.invalidate(savingsProvider);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Savings distributed successfully!')));
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final summaryAsync = ref.watch(summaryProvider);
@@ -161,6 +280,130 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           } : null,
                         ).animate().fade(duration: 500.ms, delay: 200.ms).slideY(begin: 0.2, end: 0),
 
+                        const SizedBox(height: 32),
+                        
+                        // Active Savings Goals
+                        savingsAsync.when(
+                          data: (savings) {
+                            if (savings.isEmpty) return const SizedBox.shrink();
+                            
+                            return Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Active Savings Goals',
+                                            style: theme.textTheme.titleLarge?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (netBalance > 0)
+                                        FilledButton.icon(
+                                          onPressed: () => _showDistributeSavingsModal(netBalance, savings),
+                                          icon: const Icon(Icons.call_split, size: 16),
+                                          label: const Text('Distribute'),
+                                          style: FilledButton.styleFrom(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ...savings.map((goal) {
+                                    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
+                                    final isComplete = progress >= 1.0;
+                                    
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  goal.name,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${(progress * 100).toStringAsFixed(1)}%',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                '₹${goal.currentAmount.toStringAsFixed(0)}',
+                                                style: theme.textTheme.bodyMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
+                                                ),
+                                              ),
+                                              Text(
+                                                '/ ₹${goal.targetAmount.toStringAsFixed(0)}',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.outline,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(4),
+                                            child: LinearProgressIndicator(
+                                              value: progress,
+                                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                isComplete ? Colors.green : theme.colorScheme.primary,
+                                              ),
+                                              minHeight: 6,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ).animate().fade(duration: 500.ms, delay: 300.ms).slideY(begin: 0.2, end: 0);
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                        
                         const SizedBox(height: 32),
 
                         // Cash Flow Chart
@@ -431,116 +674,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ),
                           ),
                         
-                        const SizedBox(height: 32),
-                        
-                        // Active Savings Goals
-                        savingsAsync.when(
-                          data: (savings) {
-                            if (savings.isEmpty) return const SizedBox.shrink();
-                            
-                            return Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: theme.cardTheme.color ?? theme.colorScheme.surface,
-                                borderRadius: BorderRadius.circular(32),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Active Savings Goals',
-                                        style: theme.textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ...savings.map((goal) {
-                                    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
-                                    final isComplete = progress >= 1.0;
-                                    
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  goal.name,
-                                                  style: theme.textTheme.titleMedium?.copyWith(
-                                                    fontWeight: FontWeight.w700,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              Text(
-                                                '${(progress * 100).toStringAsFixed(1)}%',
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                '₹${goal.currentAmount.toStringAsFixed(0)}',
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
-                                                ),
-                                              ),
-                                              Text(
-                                                '/ ₹${goal.targetAmount.toStringAsFixed(0)}',
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  color: theme.colorScheme.outline,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
-                                            child: LinearProgressIndicator(
-                                              value: progress,
-                                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                                              valueColor: AlwaysStoppedAnimation<Color>(
-                                                isComplete ? Colors.green : theme.colorScheme.primary,
-                                              ),
-                                              minHeight: 6,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ).animate().fade(duration: 500.ms, delay: 500.ms).slideY(begin: 0.2, end: 0);
-                          },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        ),
-                        
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
