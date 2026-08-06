@@ -11,8 +11,8 @@ class ApiClient {
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // Use 10.0.2.2 for Android Emulator connecting to local backend
-  static const String _baseUrl = 'http://10.0.2.2:3000';
+  // Updated to your deployed API URL
+  static const String _baseUrl = 'https://server-seven-gamma-95.vercel.app';
 
   ApiClient({String? baseUrl})
       : _dio = Dio(

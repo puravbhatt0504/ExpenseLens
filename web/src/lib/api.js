@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+  baseURL: 'https://server-seven-gamma-95.vercel.app',
   headers: {
     'Content-Type': 'application/json',
   },
