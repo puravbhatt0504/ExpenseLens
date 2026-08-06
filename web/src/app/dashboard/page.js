@@ -11,9 +11,9 @@ import {
   TrendingUp,
   Receipt,
   Wallet,
-  AlertCircle,
   TrendingDown,
-  Scale
+  Scale,
+  PiggyBank
 } from 'lucide-react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
@@ -35,6 +35,8 @@ export default function DashboardOverview() {
       }
     }
   });
+
+  const { data: savings, isLoading: loadingSavings } = useSWR('/savings', fetcher);
 
   const shiftMonth = (offset) => {
     const [year, month] = currentMonth.split('-').map(Number);
@@ -236,6 +238,40 @@ export default function DashboardOverview() {
                 </motion.div>
 
               </div>
+
+              {/* SAVINGS ROW */}
+              {!loadingSavings && savings && savings.length > 0 && (
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
+                      <PiggyBank size={16} className="text-[#0284c7]" /> Active Savings Goals
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {savings.map(goal => {
+                      const progress = Math.min(100, (goal.current_amount / goal.target_amount) * 100);
+                      const isComplete = progress >= 100;
+                      return (
+                        <div key={goal.id} className="p-4 rounded-xl border border-border/50 bg-surface/30 flex flex-col gap-3 hover:bg-surface transition-colors cursor-pointer" onClick={() => router.push('/dashboard/savings')}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">{goal.icon || '🎯'}</span>
+                            <span className="font-bold text-foreground truncate">{goal.name}</span>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-end mb-1">
+                              <span className={`font-extrabold ${isComplete ? 'text-[#10b981]' : 'text-[#0284c7]'}`}>{formatCurrency(goal.current_amount)}</span>
+                              <span className="text-xs font-semibold text-text-muted">/ {formatCurrency(goal.target_amount)}</span>
+                            </div>
+                            <div className="h-2 w-full bg-border/50 rounded-full overflow-hidden">
+                              <div className={`h-full transition-all duration-500 ${isComplete ? 'bg-[#10b981]' : 'bg-[#0284c7]'}`} style={{ width: `${progress}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
 
             </motion.div>
           ) : (

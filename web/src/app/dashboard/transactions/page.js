@@ -9,10 +9,11 @@ import {
   Receipt,
   Hexagon,
   AlertCircle,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import useSWR from 'swr';
-import { fetcher } from '@/lib/api';
+import api, { fetcher } from '@/lib/api';
 import AddTransactionModal from '@/components/AddTransactionModal';
 import SmoothScroll from '@/components/SmoothScroll';
 
@@ -42,6 +43,18 @@ export default function TransactionsPage() {
 
   const formatCurrency = (amount) => `₹${Number(amount).toFixed(2)}`;
   const monthName = new Date(`${currentMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      try {
+        await api.delete(`/transactions/${id}`);
+        mutate();
+      } catch (err) {
+        console.error('Failed to delete transaction:', err);
+        alert('Failed to delete transaction.');
+      }
+    }
+  };
 
   return (
     <>
@@ -135,8 +148,17 @@ export default function TransactionsPage() {
                           <td className="py-4 px-6 text-text-muted capitalize text-xs">
                             {txn.payment_method || (txn.source ? txn.source.replace('_', ' ') : 'Cash')}
                           </td>
-                          <td className="py-4 px-6 text-right font-bold text-foreground">
-                            {formatCurrency(txn.amount)}
+                          <td className="py-4 px-6">
+                            <div className="flex items-center justify-end gap-3">
+                              <span className="font-bold text-foreground">{formatCurrency(txn.amount)}</span>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDelete(txn.id); }}
+                                className="p-1.5 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-md transition-colors"
+                                title="Delete Transaction"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </motion.tr>
                       );

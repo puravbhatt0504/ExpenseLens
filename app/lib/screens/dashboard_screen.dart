@@ -61,6 +61,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final summaryAsync = ref.watch(summaryProvider);
+    final savingsAsync = ref.watch(savingsProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -429,6 +430,117 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ],
                             ),
                           ),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Active Savings Goals
+                        savingsAsync.when(
+                          data: (savings) {
+                            if (savings.isEmpty) return const SizedBox.shrink();
+                            
+                            return Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(32),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.savings_outlined, color: theme.colorScheme.primary),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Active Savings Goals',
+                                        style: theme.textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ...savings.map((goal) {
+                                    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
+                                    final isComplete = progress >= 1.0;
+                                    
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  goal.name,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              Text(
+                                                '${(progress * 100).toStringAsFixed(1)}%',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                '₹${goal.currentAmount.toStringAsFixed(0)}',
+                                                style: theme.textTheme.bodyMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isComplete ? Colors.green : theme.colorScheme.primary,
+                                                ),
+                                              ),
+                                              Text(
+                                                '/ ₹${goal.targetAmount.toStringAsFixed(0)}',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.outline,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          ClipRRect(
+                                            borderRadius: BorderRadius.circular(4),
+                                            child: LinearProgressIndicator(
+                                              value: progress,
+                                              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                isComplete ? Colors.green : theme.colorScheme.primary,
+                                              ),
+                                              minHeight: 6,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ).animate().fade(duration: 500.ms, delay: 500.ms).slideY(begin: 0.2, end: 0);
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                        
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
