@@ -6,8 +6,8 @@ import 'package:open_filex/open_filex.dart';
 import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
 import '../theme/app_theme.dart';
+import '../models/savings_goal.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
 /// Dashboard screen — displays monthly spend, income, and category breakdown chart.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
