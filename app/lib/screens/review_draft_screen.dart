@@ -292,6 +292,7 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
                   ),
                   isExpanded: true,
                   items: categories.map((cat) {
+                    final groupPrefix = cat.categoryGroup != null ? '${cat.categoryGroup} - ' : '';
                     return DropdownMenuItem<int>(
                       value: cat.id,
                       child: Row(
@@ -299,7 +300,12 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
                           Text(cat.icon ?? '📌',
                               style: const TextStyle(fontSize: 20)),
                           const SizedBox(width: 12),
-                          Text(cat.name),
+                          Expanded(
+                            child: Text(
+                              '$groupPrefix${cat.name}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     );

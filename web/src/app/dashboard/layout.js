@@ -2,15 +2,16 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Hexagon, 
-  LayoutDashboard, 
-  Receipt, 
-  Wallet, 
-  LogOut,
-  Landmark,
-  PiggyBank
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  DashboardSquare01Icon,
+  Money02Icon,
+  ReceiptIndianRupeeIcon,
+  Wallet01Icon,
+  PiggyBankIcon,
+  Logout01Icon,
+  HexagonIcon,
+} from '@hugeicons/core-free-icons';
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
@@ -22,25 +23,24 @@ export default function DashboardLayout({ children }) {
   };
 
   const navItems = [
-    { name: 'Overview', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Income', path: '/dashboard/income', icon: Landmark },
-    { name: 'Transactions', path: '/dashboard/transactions', icon: Receipt },
-    { name: 'Budgets', path: '/dashboard/budgets', icon: Wallet },
-    { name: 'Savings', path: '/dashboard/savings', icon: PiggyBank },
+    { name: 'Overview', path: '/dashboard', icon: DashboardSquare01Icon },
+    { name: 'Income', path: '/dashboard/income', icon: Money02Icon },
+    { name: 'Transactions', path: '/dashboard/transactions', icon: ReceiptIndianRupeeIcon },
+    { name: 'Budgets', path: '/dashboard/budgets', icon: Wallet01Icon },
+    { name: 'Savings', path: '/dashboard/savings', icon: PiggyBankIcon },
   ];
 
   return (
     <div className="flex h-screen bg-surface overflow-hidden font-sans">
       <aside className="w-[260px] bg-white border-r border-border py-6 px-4 flex flex-col z-10 shrink-0">
         <div className="text-xl font-bold tracking-tight flex items-center gap-2 mb-10 px-2 text-foreground">
-          <Hexagon size={20} className="fill-black text-black" />
+          <HugeiconsIcon icon={HexagonIcon} size={20} color="black" strokeWidth={2} />
           ExpenseLens
         </div>
         
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => {
             const isActive = pathname === item.path;
-            const Icon = item.icon;
             
             return (
               <Link 
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }) {
                     : 'font-medium text-text-muted hover:bg-surface hover:text-foreground'
                 }`}
               >
-                <Icon size={18} /> {item.name}
+                <HugeiconsIcon icon={item.icon} size={18} color="currentColor" strokeWidth={1.75} /> {item.name}
               </Link>
             );
           })}
@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }) {
           className="flex items-center gap-3 p-3 rounded-lg text-sm font-medium cursor-pointer text-text-muted hover:bg-surface hover:text-foreground transition-all mt-auto" 
           onClick={handleLogout}
         >
-          <LogOut size={18} /> Sign Out
+          <HugeiconsIcon icon={Logout01Icon} size={18} color="currentColor" strokeWidth={1.75} /> Sign Out
         </button>
       </aside>
 

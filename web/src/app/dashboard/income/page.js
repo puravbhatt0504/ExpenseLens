@@ -3,20 +3,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft,
-  ChevronRight,
-  Landmark,
-  Hexagon,
-  AlertCircle,
-  Plus,
-  Briefcase,
-  Gift,
-  DollarSign,
-  TrendingUp,
-  X,
-  Trash2
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Money02Icon,
+  HexagonIcon,
+  AlertCircleIcon,
+  PlusSignIcon,
+  Briefcase01Icon,
+  GiftIcon,
+  MoneyReceive01Icon,
+  ArrowUpRight01Icon,
+  Cancel01Icon,
+  Delete02Icon,
+} from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
@@ -77,14 +78,14 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
             <div className="flex justify-between items-center p-6 border-b border-border bg-surface/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#e8f5e9] border border-[#c8e6c9] flex items-center justify-center text-[#2e7d32] shadow-sm">
-                  <TrendingUp size={16} />
+                  <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} color="#2e7d32" strokeWidth={1.75} />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold tracking-tight">Record Income</h2>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 text-text-muted hover:bg-surface rounded-md">
-                <X size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} color="currentColor" strokeWidth={1.75} />
               </button>
             </div>
 
@@ -141,7 +142,7 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
               {error && <p className="text-[#e00] text-sm font-medium">{error}</p>}
               <div className="mt-2 flex justify-end">
                 <button type="submit" disabled={loading} className="bg-[#2e7d32] text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-[#1b5e20] transition-colors shadow-sm">
-                  {loading ? <Hexagon size={16} className="animate-spin" /> : <Plus size={16} />}
+                  {loading ? <HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} className="animate-spin" /> : <HugeiconsIcon icon={PlusSignIcon} size={16} color="white" strokeWidth={1.75} />}
                   Add Income
                 </button>
               </div>
@@ -196,9 +197,9 @@ export default function IncomePage() {
 
   const getSourceIcon = (source) => {
     switch(source) {
-      case 'Salary': return <Briefcase size={18} />;
-      case 'Gift': return <Gift size={18} />;
-      default: return <DollarSign size={18} />;
+      case 'Salary': return <HugeiconsIcon icon={Briefcase01Icon} size={18} color="currentColor" strokeWidth={1.75} />;
+      case 'Gift': return <HugeiconsIcon icon={GiftIcon} size={18} color="currentColor" strokeWidth={1.75} />;
+      default: return <HugeiconsIcon icon={MoneyReceive01Icon} size={18} color="currentColor" strokeWidth={1.75} />;
     }
   };
 
@@ -209,11 +210,11 @@ export default function IncomePage() {
         
         <div className="flex items-center gap-2">
           <button onClick={() => setIsModalOpen(true)} className="bg-[#2e7d32] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 mr-4 text-xs hover:bg-[#1b5e20] transition-colors">
-            <Plus size={14} /> Add Income
+            <HugeiconsIcon icon={PlusSignIcon} size={14} color="white" strokeWidth={1.75} /> Add Income
           </button>
-          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronLeft size={16} /></button>
+          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
           <span className="text-sm font-semibold w-[140px] text-center">{monthName}</span>
-          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronRight size={16} /></button>
+          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronRightIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
         </div>
       </header>
 
@@ -227,7 +228,7 @@ export default function IncomePage() {
             className="bg-gradient-to-br from-[#1b5e20] to-[#2e7d32] rounded-2xl p-8 text-white shadow-xl relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-8 opacity-20">
-              <Landmark size={120} />
+              <HugeiconsIcon icon={Money02Icon} size={120} color="white" strokeWidth={1} />
             </div>
             <p className="text-[#a5d6a7] font-semibold mb-2">Total Received in {monthName}</p>
             <h1 className="text-5xl font-extrabold tracking-tight">
@@ -238,7 +239,7 @@ export default function IncomePage() {
           <div className="bg-white border border-border rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[400px]">
             <div className="p-6 border-b border-border flex items-center gap-3 bg-surface/30">
               <div className="w-10 h-10 rounded-lg bg-white border border-border flex items-center justify-center text-foreground">
-                <TrendingUp size={20} />
+                <HugeiconsIcon icon={ArrowUpRight01Icon} size={20} color="currentColor" strokeWidth={1.75} />
               </div>
               <div>
                 <h2 className="text-lg font-bold tracking-tight">Income Streams</h2>
@@ -249,16 +250,16 @@ export default function IncomePage() {
             <div className="flex-1 p-0">
               {isLoading ? (
                 <div className="flex h-full justify-center items-center py-20">
-                  <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
+                  <div className="animate-spin text-text-muted"><HugeiconsIcon icon={HexagonIcon} size={32} color="currentColor" strokeWidth={1.75} /></div>
                 </div>
               ) : error ? (
                 <div className="flex flex-col items-center justify-center py-20 text-[#e00] text-sm font-medium">
-                  <AlertCircle size={24} className="opacity-50 mb-2" />
+                  <HugeiconsIcon icon={AlertCircleIcon} size={24} color="currentColor" strokeWidth={1.75} className="opacity-50 mb-2" />
                   Failed to load income records.
                 </div>
               ) : (!incomes || incomes.length === 0) ? (
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 text-text-muted text-sm font-medium">
-                  <Landmark size={32} className="opacity-40 mb-3" />
+                  <HugeiconsIcon icon={Money02Icon} size={32} color="currentColor" strokeWidth={1.75} className="opacity-40 mb-3" />
                   No income recorded this month.
                 </motion.div>
               ) : (
@@ -302,7 +303,7 @@ export default function IncomePage() {
                             onClick={(e) => { e.stopPropagation(); handleDelete(inc.id); }}
                             className="p-2 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-full transition-colors"
                           >
-                            <Trash2 size={18} />
+                            <HugeiconsIcon icon={Delete02Icon} size={18} color="currentColor" strokeWidth={1.75} />
                           </button>
                         </div>
                       </motion.li>

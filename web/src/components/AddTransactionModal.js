@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Hexagon, Save, Receipt, Calendar, Tag, CreditCard } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Cancel01Icon,
+  HexagonIcon,
+  FloppyDiskIcon,
+  ReceiptIndianRupeeIcon,
+  CalendarCheckOut01Icon,
+  Tag01Icon,
+  CreditCardIcon,
+} from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 
@@ -81,7 +90,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
             <div className="flex justify-between items-center p-6 border-b border-border bg-surface/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-foreground shadow-sm">
-                  <Receipt size={16} />
+                  <HugeiconsIcon icon={Receipt01Icon} size={16} color="currentColor" strokeWidth={1.75} />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold tracking-tight">Log Transaction</h2>
@@ -92,7 +101,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                 onClick={handleClose}
                 className="p-2 text-text-muted hover:text-foreground hover:bg-surface rounded-md transition-colors"
               >
-                <X size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} color="currentColor" strokeWidth={1.75} />
               </button>
             </div>
 
@@ -100,7 +109,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
               
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CreditCard size={14} className="text-text-muted" /> Amount <span className="text-[#e00]">*</span>
+                  <HugeiconsIcon icon={CreditCardIcon} size={14} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Amount <span className="text-[#e00]">*</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
@@ -120,7 +129,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Calendar size={14} className="text-text-muted" /> Date <span className="text-[#e00]">*</span>
+                  <HugeiconsIcon icon={CalendarCheckOut01Icon} size={14} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Date <span className="text-[#e00]">*</span>
                 </label>
                 <input 
                   type="date" 
@@ -133,7 +142,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Receipt size={14} className="text-text-muted" /> Merchant / Note
+                  <HugeiconsIcon icon={ReceiptIndianRupeeIcon} size={16} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Merchant / Note
                 </label>
                 <input 
                   type="text" 
@@ -146,7 +155,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <CreditCard size={14} className="text-text-muted" /> Payment Method
+                  <HugeiconsIcon icon={CreditCardIcon} size={14} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Payment Method
                 </label>
                 <select
                   className="w-full px-4 py-2.5 rounded-lg border border-border focus:border-black focus:ring-1 focus:ring-black outline-none transition-all font-semibold text-sm bg-white"
@@ -163,7 +172,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Tag size={14} className="text-text-muted" /> Category
+                  <HugeiconsIcon icon={Tag01Icon} size={14} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Category
                 </label>
                 <select
                   className="w-full px-4 py-2.5 rounded-lg border border-border focus:border-black focus:ring-1 focus:ring-black outline-none transition-all font-semibold text-sm bg-white"
@@ -171,10 +180,29 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                   onChange={e => setCategoryId(e.target.value)}
                 >
                   <option value="">Uncategorized</option>
-                  {categories?.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
+                  {categories && Object.entries(
+                    categories.reduce((acc, cat) => {
+                      const group = cat.category_group || 'Uncategorized';
+                      if (!acc[group]) acc[group] = [];
+                      acc[group].push(cat);
+                      return acc;
+                    }, {})
+                  ).map(([group, cats]) => (
+                    group === 'Uncategorized' ? (
+                      cats.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.icon && cat.icon.startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
+                        </option>
+                      ))
+                    ) : (
+                      <optgroup key={group} label={group}>
+                        {cats.map(cat => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.icon && cat.icon.startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )
                   ))}
                 </select>
               </div>
@@ -195,7 +223,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                   className="btn-primary flex items-center gap-2"
                   disabled={loading}
                 >
-                  {loading ? <Hexagon size={16} className="animate-spin" /> : <Save size={16} />}
+                  {loading ? <HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} className="animate-spin" /> : <HugeiconsIcon icon={FloppyDiskIcon} size={16} color="white" strokeWidth={1.75} />}
                   Save Transaction
                 </button>
               </div>

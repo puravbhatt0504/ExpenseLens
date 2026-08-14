@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  ChevronLeft,
-  ChevronRight,
-  Receipt,
-  Hexagon,
-  AlertCircle,
-  Plus,
-  Trash2
-} from 'lucide-react';
+import { HugeiconsIcon, TransactionIcon, ArrowUpRight01Icon, ArrowDownRight01Icon, FilterIcon, Calendar03Icon, Receipt01Icon } from '@hugeicons/react';
+import CategoryIcon from '../../components/CategoryIcon';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ReceiptIndianRupeeIcon,
+  HexagonIcon,
+  AlertCircleIcon,
+  PlusSignIcon,
+  Delete02Icon,
+} from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import AddTransactionModal from '@/components/AddTransactionModal';
@@ -64,11 +66,11 @@ export default function TransactionsPage() {
         
         <div className="flex items-center gap-2">
           <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center gap-2 mr-4 text-xs py-1.5">
-            <Plus size={14} /> Add Transaction
+            <HugeiconsIcon icon={PlusSignIcon} size={14} color="white" strokeWidth={1.75} /> Add Transaction
           </button>
-          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronLeft size={16} /></button>
+          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
           <span className="text-sm font-semibold w-[140px] text-center">{monthName}</span>
-          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronRight size={16} /></button>
+          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronRightIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
         </div>
       </header>
 
@@ -83,7 +85,7 @@ export default function TransactionsPage() {
           
           <div className="p-6 border-b border-border flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-surface border border-border flex items-center justify-center text-foreground">
-              <Receipt size={20} />
+              <HugeiconsIcon icon={ReceiptIndianRupeeIcon} size={20} color="currentColor" strokeWidth={1.75} />
             </div>
             <div>
               <h2 className="text-lg font-bold tracking-tight">Ledger</h2>
@@ -109,16 +111,16 @@ export default function TransactionsPage() {
           <div className="flex-1 p-0">
             {loading ? (
               <div className="flex h-full justify-center items-center py-20">
-                <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
+                <div className="animate-spin text-text-muted"><HugeiconsIcon icon={HexagonIcon} size={32} color="currentColor" strokeWidth={1.75} /></div>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-20 text-[#e00] text-sm font-medium">
-                <AlertCircle size={24} className="opacity-50 mb-2" />
+                <HugeiconsIcon icon={AlertCircleIcon} size={24} color="currentColor" strokeWidth={1.75} className="opacity-50 mb-2" />
                 Failed to load transactions.
               </div>
             ) : (!transactions || transactions.length === 0) ? (
               <div className="flex flex-col items-center justify-center py-20 text-text-muted text-sm font-medium">
-                <AlertCircle size={24} className="opacity-50 mb-2" />
+                <HugeiconsIcon icon={AlertCircleIcon} size={24} color="currentColor" strokeWidth={1.75} className="opacity-50 mb-2" />
                 No transactions recorded this month.
               </div>
             ) : (
@@ -163,11 +165,13 @@ export default function TransactionsPage() {
                             {txn.merchant || txn.note || 'Untitled'}
                           </td>
                           <td className="py-4 px-6">
-                            <span 
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-bold border border-border/50 bg-white"
-                              style={{ color: txn.category_color || '#000' }}
-                            >
-                              {txn.category_icon} {txn.category_name || 'Uncategorized'}
+                            <span className="inline-flex items-center gap-2 font-semibold">
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-surface border border-border text-[10px] shadow-sm shrink-0"
+                                style={{ color: txn.category_color || '#000' }}
+                              >
+                                <CategoryIcon icon={txn.category_icon} className="w-3.5 h-3.5" />
+                              </span>
+                              {txn.category_name || 'Uncategorized'}
                             </span>
                           </td>
                           <td className="py-4 px-6 text-text-muted capitalize text-xs">
@@ -181,7 +185,7 @@ export default function TransactionsPage() {
                                 className="p-1.5 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-md transition-colors"
                                 title="Delete Transaction"
                               >
-                                <Trash2 size={16} />
+                                <HugeiconsIcon icon={Delete02Icon} size={16} color="currentColor" strokeWidth={1.75} />
                               </button>
                             </div>
                           </td>

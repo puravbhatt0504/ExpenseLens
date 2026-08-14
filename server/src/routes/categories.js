@@ -10,7 +10,7 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT id, name, icon, color FROM categories ORDER BY id'
+      'SELECT id, name, category_group, icon, color FROM categories ORDER BY category_group NULLS LAST, name'
     );
     // Cache categories aggressively (1 hour at edge, 1 hour at browser)
     // Categories are shared across all users and rarely change
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 // POST /categories — create a new category
 router.post('/', async (req, res) => {
   try {
-    let { name, icon, color } = req.body;
+    let { name, category_group, icon, color } = req.body;
 
     if (!name) {
       return res.status(400).json({ error: 'Missing required field: name' });
@@ -51,10 +51,10 @@ router.post('/', async (req, res) => {
     }
 
     const { rows } = await db.query(
-      `INSERT INTO categories (name, icon, color)
-       VALUES ($1, $2, $3)
+      `INSERT INTO categories (name, category_group, icon, color)
+       VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [name, icon, color]
+      [name, category_group || null, icon, color]
     );
 
     res.status(201).json(rows[0]);

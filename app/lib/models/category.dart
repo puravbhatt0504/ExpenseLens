@@ -6,12 +6,15 @@ part 'category.g.dart';
 class Category {
   final int id;
   final String name;
+  @JsonKey(name: 'category_group')
+  final String? categoryGroup;
   final String? icon;
   final String? color;
 
   Category({
     required this.id,
     required this.name,
+    this.categoryGroup,
     this.icon,
     this.color,
   });
@@ -22,5 +25,5 @@ class Category {
   Map<String, dynamic> toJson() => _$CategoryToJson(this);
 
   @override
-  String toString() => 'Category(id: $id, name: $name)';
+  String toString() => 'Category(id: $id, name: $name, group: $categoryGroup)';
 }

@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useSpring, useVelocity } from 'framer-motion';
-import { ArrowRight, Hexagon, BarChart3, Shield, Zap } from 'lucide-react';
+import { ArrowRight, Hexagon, BarChart3, Shield, Zap, Smartphone } from 'lucide-react';
 import { ReactLenis } from 'lenis/react';
 
 const SkewContainer = ({ children }) => {
@@ -64,10 +64,13 @@ export default function LandingPage() {
                 A professional suite to track, analyze, and optimize your financial operations. Built for speed, designed for clarity.
               </motion.p>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex gap-4 justify-center items-center">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex gap-4 justify-center items-center flex-wrap">
                 <Link href="/login" className="btn-primary flex items-center gap-2 px-6 py-3 text-sm">
                   Start Tracking <ArrowRight size={16} />
                 </Link>
+                <a href="/expenselens.apk" download className="btn-secondary flex items-center gap-2 px-6 py-3 text-sm bg-black text-white border-black hover:bg-black/90 hover:text-white transition-all shadow-md">
+                  <Smartphone size={16} /> Download App
+                </a>
                 <Link href="#features" className="btn-secondary px-6 py-3 text-sm">
                   Explore Features
                 </Link>

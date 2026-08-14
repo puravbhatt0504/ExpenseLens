@@ -4,19 +4,20 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
-import { 
-  Hexagon, 
-  ChevronLeft,
-  ChevronRight,
-  TrendingUp,
-  Receipt,
-  Wallet,
-  TrendingDown,
-  Scale,
-  PiggyBank,
-  X,
-  Split
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  ArrowUpRight01Icon,
+  ArrowDownRight01Icon,
+  ReceiptIndianRupeeIcon,
+  Wallet01Icon,
+  PiggyBankIcon,
+  ArrowLeftRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  Cancel01Icon,
+  HexagonIcon,
+  JusticeScale01Icon,
+} from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
@@ -85,9 +86,9 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-6 border-b border-border bg-surface/50 flex justify-between items-center">
           <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            <PiggyBank size={20} className="text-[#0284c7]" /> Distribute Savings
+            <HugeiconsIcon icon={PiggyBankIcon} size={20} color="#0284c7" strokeWidth={1.75} /> Distribute Savings
           </h2>
-          <button onClick={onClose} className="p-2 text-text-muted hover:bg-surface rounded-md"><X size={20} /></button>
+          <button onClick={onClose} className="p-2 text-text-muted hover:bg-surface rounded-md"><HugeiconsIcon icon={Cancel01Icon} size={20} color="currentColor" strokeWidth={1.75} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex flex-col gap-6">
           <div className="flex justify-between items-center bg-[#e0f2fe] text-[#0284c7] p-4 rounded-xl">
@@ -96,7 +97,7 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
               <p className="text-2xl font-extrabold">₹{remaining.toFixed(2)}</p>
             </div>
             <button type="button" onClick={handleAutoSplit} className="bg-white text-[#0284c7] px-4 py-2 rounded-lg font-bold shadow-sm hover:shadow-md transition-shadow text-sm flex items-center gap-2">
-              <Split size={16} /> Auto-Split Equally
+              <HugeiconsIcon icon={ArrowLeftRightIcon} size={16} color="#0284c7" strokeWidth={1.75} /> Auto-Split Equally
             </button>
           </div>
           <div className="flex flex-col gap-4">
@@ -179,8 +180,8 @@ export default function DashboardOverview() {
       return (
         <div className="bg-white border border-border p-3 rounded-lg shadow-md text-sm font-medium">
           {data.categoryName ? (
-            <div className="flex items-center gap-2 mb-1">
-              <span style={{ color: data.categoryColor || '#000' }}>{data.categoryIcon}</span>
+            <div className="flex items-center gap-2 mt-2 font-semibold">
+              <CategoryIcon icon={data.categoryIcon} className="w-4 h-4" />
               <span>{data.categoryName}</span>
             </div>
           ) : (
@@ -208,9 +209,9 @@ export default function DashboardOverview() {
         <h1 className="text-lg font-semibold tracking-tight">Overview</h1>
         
         <div className="flex items-center gap-2">
-          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronLeft size={16} /></button>
+          <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
           <span className="text-sm font-semibold w-[140px] text-center">{monthName}</span>
-          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><ChevronRight size={16} /></button>
+          <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronRightIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
         </div>
       </header>
 
@@ -226,7 +227,7 @@ export default function DashboardOverview() {
         <div className="max-w-[1200px] mx-auto">
           {loading ? (
             <div className="flex flex-1 justify-center items-center h-[60vh]">
-              <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
+              <div className="animate-spin text-text-muted"><HugeiconsIcon icon={HexagonIcon} size={32} color="currentColor" strokeWidth={1.75} /></div>
             </div>
           ) : summary ? (
             <motion.div 
@@ -239,7 +240,7 @@ export default function DashboardOverview() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-4 uppercase tracking-wider">
-                    <Scale size={16} className="text-[#0284c7]" /> Net Balance
+                    <HugeiconsIcon icon={JusticeScale01Icon} size={16} color="#0284c7" strokeWidth={1.75} /> Net Balance
                   </div>
                   <h2 className={`text-4xl font-extrabold tracking-tight ${netBalance >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
                     {netBalance >= 0 ? '+' : '-'}{formatCurrency(Math.abs(netBalance))}
@@ -248,7 +249,7 @@ export default function DashboardOverview() {
 
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-4 uppercase tracking-wider">
-                    <TrendingUp size={16} className="text-[#10b981]" /> Total Income
+                    <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} color="#10b981" strokeWidth={1.75} /> Total Income
                   </div>
                   <h2 className="text-4xl font-extrabold tracking-tight text-foreground">
                     {formatCurrency(summary.totalIncome)}
@@ -260,7 +261,7 @@ export default function DashboardOverview() {
               <div className={`grid grid-cols-1 ${!loadingSavings && savings && savings.length > 0 ? 'md:grid-cols-2' : ''} gap-6`}>
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-4 uppercase tracking-wider">
-                    <TrendingDown size={16} className="text-[#ef4444]" /> Total Spend
+                    <HugeiconsIcon icon={ArrowDownRight01Icon} size={16} color="#ef4444" strokeWidth={1.75} /> Total Spend
                   </div>
                   <h2 className="text-4xl font-extrabold tracking-tight text-foreground mb-4">
                     {formatCurrency(summary.total)}
@@ -290,14 +291,14 @@ export default function DashboardOverview() {
                   <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                       <div className="text-sm font-bold text-text-muted flex items-center gap-2 uppercase tracking-wider">
-                        <PiggyBank size={16} className="text-[#0284c7]" /> Savings
+                        <HugeiconsIcon icon={PiggyBankIcon} size={16} color="#0284c7" strokeWidth={1.75} /> Savings
                       </div>
                       {netBalance > 0 && (
                         <button 
                           onClick={() => setIsDistributeOpen(true)}
                           className="bg-[#0284c7] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 text-xs hover:bg-[#0369a1] transition-colors"
                         >
-                          <Split size={14} /> Split
+                          <HugeiconsIcon icon={ArrowLeftRightIcon} size={14} color="white" strokeWidth={1.75} /> Split
                         </button>
                       )}
                     </div>
@@ -333,7 +334,7 @@ export default function DashboardOverview() {
                 {/* Income Utilization Donut Chart */}
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col min-h-[350px]">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-6 uppercase tracking-wider">
-                    <Wallet size={16} /> Income Utilization
+                    <HugeiconsIcon icon={Wallet01Icon} size={16} color="currentColor" strokeWidth={1.75} /> Income Utilization
                   </div>
                   <div className="flex-1 w-full relative flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
@@ -368,7 +369,7 @@ export default function DashboardOverview() {
                 {/* Category Breakdown & Pie Chart */}
                 <motion.div variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }} className="bg-white border border-border rounded-2xl p-6 shadow-sm flex flex-col min-h-[350px]">
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-6 uppercase tracking-wider">
-                    <Receipt size={16} /> Expense Breakdown
+                    <HugeiconsIcon icon={ReceiptIndianRupeeIcon} size={16} color="currentColor" strokeWidth={1.75} /> Expense Breakdown
                   </div>
                   
                   {summary.byCategory.length === 0 ? (
@@ -400,7 +401,7 @@ export default function DashboardOverview() {
                         {summary.byCategory.map((cat, i) => (
                           <div key={cat.categoryId || i} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/50 bg-surface/30 hover:bg-surface transition-colors">
                             <div className="w-8 h-8 rounded-full bg-white border border-border flex justify-center items-center text-sm shadow-sm shrink-0" style={{ color: cat.categoryColor || '#000' }}>
-                              {cat.categoryIcon}
+                              <CategoryIcon icon={cat.categoryIcon} className="w-4 h-4" />
                             </div>
                             <div className="flex-1 overflow-hidden">
                               <div className="flex justify-between items-end mb-1">

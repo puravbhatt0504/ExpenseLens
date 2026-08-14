@@ -3,17 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  PiggyBank,
-  Hexagon,
-  AlertCircle,
-  Plus,
-  Target,
-  X,
-  ArrowRight,
-  Wallet,
-  Trash2
-} from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  PiggyBankIcon,
+  HexagonIcon,
+  AlertCircleIcon,
+  PlusSignIcon,
+  Target01Icon,
+  Cancel01Icon,
+  ArrowRight01Icon,
+  Wallet01Icon,
+  Delete02Icon,
+} from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
@@ -73,14 +74,14 @@ const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
             <div className="flex justify-between items-center p-6 border-b border-border bg-surface/50">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#e0f2fe] border border-[#bae6fd] flex items-center justify-center text-[#0284c7] shadow-sm">
-                  <Target size={16} />
+                  <HugeiconsIcon icon={Target01Icon} size={16} color="#0284c7" strokeWidth={1.75} />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold tracking-tight">New Savings Goal</h2>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 text-text-muted hover:bg-surface rounded-md">
-                <X size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} color="currentColor" strokeWidth={1.75} />
               </button>
             </div>
 
@@ -112,7 +113,7 @@ const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
               {error && <p className="text-[#e00] text-sm font-medium">{error}</p>}
               <div className="mt-2 flex justify-end">
                 <button type="submit" disabled={loading} className="bg-[#0284c7] text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-[#0369a1] transition-colors shadow-sm">
-                  {loading ? <Hexagon size={16} className="animate-spin" /> : <Plus size={16} />}
+                  {loading ? <HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} className="animate-spin" /> : <HugeiconsIcon icon={PlusSignIcon} size={16} color="white" strokeWidth={1.75} />}
                   Create Goal
                 </button>
               </div>
@@ -225,7 +226,7 @@ export default function SavingsPage() {
       <header className="flex justify-between items-center bg-white h-16 px-10 border-b border-border shrink-0">
         <h1 className="text-lg font-semibold tracking-tight">Savings Goals</h1>
         <button onClick={() => setIsModalOpen(true)} className="bg-[#0284c7] text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-2 text-xs hover:bg-[#0369a1] transition-colors">
-          <Plus size={14} /> New Goal
+          <HugeiconsIcon icon={PlusSignIcon} size={14} color="white" strokeWidth={1.75} /> New Goal
         </button>
       </header>
 
@@ -241,7 +242,7 @@ export default function SavingsPage() {
               className="bg-gradient-to-r from-[#6C63FF] to-[#0284c7] rounded-2xl p-6 shadow-sm text-white flex items-center gap-6"
             >
               <div className="bg-white/20 p-4 rounded-full">
-                <Wallet size={32} />
+                <HugeiconsIcon icon={Wallet01Icon} size={32} color="white" strokeWidth={1.5} />
               </div>
               <div>
                 <p className="text-white/80 text-sm font-semibold mb-1 uppercase tracking-wider">Net Monthly Savings</p>
@@ -255,16 +256,16 @@ export default function SavingsPage() {
 
           {isLoading ? (
             <div className="flex h-[50vh] justify-center items-center">
-              <div className="animate-spin text-text-muted"><Hexagon size={32} /></div>
+              <div className="animate-spin text-text-muted"><HugeiconsIcon icon={HexagonIcon} size={32} color="currentColor" strokeWidth={1.75} /></div>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-20 text-[#e00] text-sm font-medium">
-              <AlertCircle size={24} className="opacity-50 mb-2" />
+              <HugeiconsIcon icon={AlertCircleIcon} size={24} color="currentColor" strokeWidth={1.75} className="opacity-50 mb-2" />
               Failed to load savings goals.
             </div>
           ) : (!goals || goals.length === 0) ? (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center py-20 text-text-muted text-sm font-medium">
-              <PiggyBank size={48} className="opacity-40 mb-4 text-[#0284c7]" />
+              <HugeiconsIcon icon={PiggyBankIcon} size={48} color="#0284c7" strokeWidth={1.25} className="opacity-40 mb-4" />
               <h2 className="text-lg font-bold text-foreground mb-1">No savings goals yet</h2>
               <p>Start tracking your dreams by creating a new goal.</p>
               <button onClick={() => setIsModalOpen(true)} className="mt-4 bg-[#0284c7] text-white px-4 py-2 rounded-lg font-bold">Create a Goal</button>
@@ -295,7 +296,7 @@ export default function SavingsPage() {
                       onClick={(e) => { e.stopPropagation(); handleDeleteGoal(goal.id); }}
                       className="absolute top-3 right-3 p-2 text-text-muted hover:text-[#e00] hover:bg-[#e00]/10 rounded-full transition-colors z-10"
                     >
-                      <Trash2 size={16} />
+                      <HugeiconsIcon icon={Delete02Icon} size={16} color="currentColor" strokeWidth={1.75} />
                     </button>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="text-3xl">{goal.icon || '🎯'}</div>
@@ -331,7 +332,7 @@ export default function SavingsPage() {
                       }`}
                     >
                       {isComplete ? 'Goal Reached' : (
-                        <>Add Funds <ArrowRight size={16} /></>
+                        <>Add Funds <HugeiconsIcon icon={ArrowRight01Icon} size={16} color="#0284c7" strokeWidth={1.75} /></>
                       )}
                     </button>
                   </motion.div>
