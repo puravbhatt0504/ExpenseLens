@@ -337,7 +337,7 @@ export default function DashboardOverview() {
                   <div className="text-sm font-bold text-text-muted flex items-center gap-2 mb-6 uppercase tracking-wider">
                     <HugeiconsIcon icon={Wallet01Icon} size={16} color="currentColor" strokeWidth={1.75} /> Income Utilization
                   </div>
-                  <div className="flex-1 w-full relative flex items-center justify-center">
+                  <div className="w-full h-[250px] relative flex items-center justify-center mt-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -346,7 +346,7 @@ export default function DashboardOverview() {
                             ...(summary.totalIncome > summary.total ? [{ name: 'Remaining', amount: summary.totalIncome - summary.total, fill: '#10b981' }] : [])
                           ]}
                           dataKey="amount"
-                          cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2} stroke="none"
+                          cx="50%" cy="50%" innerRadius={70} outerRadius={95} paddingAngle={2} stroke="none"
                         >
                           {[
                             { name: 'Spent', amount: summary.total > 0 ? summary.total : 0.001, fill: '#ef4444' },
