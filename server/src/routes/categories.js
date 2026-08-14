@@ -10,7 +10,7 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT id, name, category_group, icon, color FROM categories ORDER BY category_group NULLS LAST, name'
+      'SELECT id, name, category_group, icon, color FROM categories ORDER BY category_group NULLS LAST, name /* Cache bust */'
     );
     // Cache categories aggressively (1 hour at edge, 1 hour at browser)
     // Categories are shared across all users and rarely change
