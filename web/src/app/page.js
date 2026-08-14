@@ -2,25 +2,9 @@
 
 import { useRef } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useSpring, useVelocity } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Hexagon, BarChart3, Shield, Zap, Smartphone } from 'lucide-react';
 import { ReactLenis } from 'lenis/react';
-
-const SkewContainer = ({ children }) => {
-  const { scrollY } = useScroll();
-  const scrollVelocity = useVelocity(scrollY);
-  const smoothVelocity = useSpring(scrollVelocity, {
-    damping: 50,
-    stiffness: 400
-  });
-  const skew = useTransform(smoothVelocity, [-1000, 1000], [5, -5]);
-
-  return (
-    <motion.div style={{ skewY: skew, transformOrigin: "center" }} className="w-full">
-      {children}
-    </motion.div>
-  );
-};
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll();
@@ -166,45 +150,31 @@ export default function LandingPage() {
               </p>
             </motion.div>
 
-            <SkewContainer>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10 px-4">
-                <motion.div 
-                  whileHover={{ y: -15, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="bg-surface p-12 rounded-[2rem] border border-border/50 flex flex-col items-start gap-8"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-border text-foreground shadow-sm">
-                    <Zap size={28} />
-                  </div>
-                  <h3 className="text-3xl font-bold tracking-tight">AI Extraction</h3>
-                  <p className="text-text-muted font-medium leading-relaxed text-lg">Automated receipt scanning extracts amounts, dates, and categories with blazing high precision natively on your device.</p>
-                </motion.div>
-
-                <motion.div 
-                  whileHover={{ y: -15, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="bg-surface p-12 rounded-[2rem] border border-border/50 flex flex-col items-start gap-8 md:mt-24"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-border text-foreground shadow-sm">
-                    <BarChart3 size={28} />
-                  </div>
-                  <h3 className="text-3xl font-bold tracking-tight">Advanced Analytics</h3>
-                  <p className="text-text-muted font-medium leading-relaxed text-lg">Real-time charts and categorical breakdowns provide actionable insights into your cash flow immediately.</p>
-                </motion.div>
-
-                <motion.div 
-                  whileHover={{ y: -15, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="bg-surface p-12 rounded-[2rem] border border-border/50 flex flex-col items-start gap-8 md:mt-48"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center border border-border text-foreground shadow-sm">
-                    <Shield size={28} />
-                  </div>
-                  <h3 className="text-3xl font-bold tracking-tight">Smart Budgets</h3>
-                  <p className="text-text-muted font-medium leading-relaxed text-lg">Establish custom limits per category. Proactive alerts prevent overspending before it even happens.</p>
-                </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="feature-card bg-white p-8 rounded-xl border border-border shadow-sm flex flex-col items-start gap-4 hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center border border-border text-foreground">
+                  <Zap size={20} />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">AI Extraction</h3>
+                <p className="text-text-muted font-medium leading-relaxed text-sm">Automated receipt scanning extracts amounts, dates, and categories with high precision.</p>
               </div>
-            </SkewContainer>
+
+              <div className="feature-card bg-white p-8 rounded-xl border border-border shadow-sm flex flex-col items-start gap-4 hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center border border-border text-foreground">
+                  <BarChart3 size={20} />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Advanced Analytics</h3>
+                <p className="text-text-muted font-medium leading-relaxed text-sm">Real-time charts and categorical breakdowns provide actionable insights into your cash flow.</p>
+              </div>
+
+              <div className="feature-card bg-white p-8 rounded-xl border border-border shadow-sm flex flex-col items-start gap-4 hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center border border-border text-foreground">
+                  <Shield size={20} />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Smart Budgets</h3>
+                <p className="text-text-muted font-medium leading-relaxed text-sm">Establish custom limits per category. Proactive alerts prevent overspending.</p>
+              </div>
+            </div>
           </div>
         </section>
 
