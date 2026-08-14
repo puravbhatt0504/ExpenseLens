@@ -7,7 +7,8 @@ async function main() {
   const neededIcons = [
     'shopping-cart', 'apple', 'glass', 'power', 'mobile-1', 'monitor', 
     'temp-high', 'home', 'delivery-truck', 'read', 'hospital-1', 'face-smile',
-    'calendar', 'bag-1', 'user', 'fork-knife', 'plane', 'shopping-tag'
+    'calendar', 'bag-1', 'user', 'fork-knife', 'plane', 'shopping-tag',
+    'receipt', 'play-1', 'credit-card-1', 'circle-more', 'heart', 'avocado'
   ];
 
   let dartContent = `// Generated file - circum icons
