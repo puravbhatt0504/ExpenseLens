@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon, TransactionIcon, ArrowUpRight01Icon, ArrowDownRight01Icon, FilterIcon, Calendar03Icon, Receipt01Icon } from '@hugeicons/react';
-import CategoryIcon from '../../components/CategoryIcon';
+import CategoryIcon from '@/components/CategoryIcon';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

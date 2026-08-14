@@ -191,14 +191,14 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                     group === 'Uncategorized' ? (
                       cats.map(cat => (
                         <option key={cat.id} value={cat.id}>
-                          {cat.icon && cat.icon.startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
+                          {cat.icon && cat.icon.trim().toLowerCase().startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
                         </option>
                       ))
                     ) : (
                       <optgroup key={group} label={group}>
                         {cats.map(cat => (
                           <option key={cat.id} value={cat.id}>
-                            {cat.icon && cat.icon.startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
+                            {cat.icon && cat.icon.trim().toLowerCase().startsWith('circum:') ? cat.name : `${cat.icon} ${cat.name}`}
                           </option>
                         ))}
                       </optgroup>

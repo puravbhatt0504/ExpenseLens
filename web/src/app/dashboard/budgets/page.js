@@ -13,6 +13,7 @@ import {
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
+import CategoryIcon from '@/components/CategoryIcon';
 
 export default function BudgetsPage() {
   const router = useRouter();
