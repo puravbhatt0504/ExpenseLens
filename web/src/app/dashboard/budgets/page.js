@@ -19,7 +19,7 @@ export default function BudgetsPage() {
   const router = useRouter();
   const [budgets, setBudgets] = useState({});
   const [totalBudget, setTotalBudget] = useState('');
-  const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories', fetcher);
+  const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories?v=2', fetcher);
   const { data: budgetsData, error: budgError, isLoading: budgLoading, mutate: mutateBudgets } = useSWR('/budgets', fetcher);
 
   const loading = catsLoading || budgLoading;
@@ -86,8 +86,30 @@ export default function BudgetsPage() {
 
   return (
     <>
-      <header className="flex justify-between items-center bg-white h-16 px-10 border-b border-border shrink-0">
+      <header className="flex justify-between items-center bg-white h-16 px-10 border-b border-border shrink-0 sticky top-0 z-20">
         <h1 className="text-lg font-semibold tracking-tight">Budgets</h1>
+        <div className="flex items-center gap-4">
+          {success && (
+            <motion.span 
+              initial={{ opacity: 0, x: -10 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              className="flex items-center gap-1.5 text-[#00a86b] text-sm font-bold"
+            >
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} color="#00a86b" strokeWidth={1.75} /> Saved
+            </motion.span>
+          )}
+          <button 
+            onClick={saveBudgets}
+            disabled={saving}
+            className="btn-primary flex items-center gap-2 text-sm px-4 py-2"
+          >
+            {saving ? (
+              <div className="animate-spin"><HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} /></div>
+            ) : (
+              <><HugeiconsIcon icon={FloppyDiskIcon} size={16} color="white" strokeWidth={1.75} /> Save Changes</>
+            )}
+          </button>
+        </div>
       </header>
 
       <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
@@ -134,7 +156,7 @@ export default function BudgetsPage() {
                 </div>
               </div>
 
-              <div className="p-8 pb-28">
+              <div className="p-8">
                 <h3 className="text-sm font-bold text-foreground mb-4">Category Limits</h3>
                 
                 {categories && Object.entries(
@@ -174,30 +196,6 @@ export default function BudgetsPage() {
                   </div>
                 ))}
               </div>
-              
-              <div className="p-6 bg-white/90 backdrop-blur-sm border-t border-border flex justify-end items-center gap-4 sticky bottom-0 z-20 rounded-b-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                {success && (
-                    <motion.span 
-                      initial={{ opacity: 0, x: -10 }} 
-                      animate={{ opacity: 1, x: 0 }} 
-                      className="flex items-center gap-1.5 text-[#00a86b] text-sm font-bold"
-                    >
-                      <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} color="#00a86b" strokeWidth={1.75} /> Saved
-                    </motion.span>
-                )}
-                <button 
-                  onClick={saveBudgets}
-                  disabled={saving}
-                  className="btn-primary flex items-center gap-2"
-                >
-                  {saving ? (
-                    <div className="animate-spin"><HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} /></div>
-                  ) : (
-                    <><HugeiconsIcon icon={FloppyDiskIcon} size={16} color="white" strokeWidth={1.75} /> Save Changes</>
-                  )}
-                </button>
-              </div>
-
             </motion.div>
           )}
         </div>
