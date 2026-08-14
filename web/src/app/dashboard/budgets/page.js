@@ -102,12 +102,12 @@ export default function BudgetsPage() {
             </div>
           ) : (
             <motion.div 
-              className="bg-white border border-border rounded-xl shadow-sm flex flex-col overflow-hidden"
+              className="bg-white border border-border rounded-xl shadow-sm flex flex-col relative"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="p-8 border-b border-border bg-surface/50">
+              <div className="p-8 border-b border-border bg-surface/50 rounded-t-xl">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-lg bg-white border border-border flex items-center justify-center text-foreground shadow-sm">
                     <HugeiconsIcon icon={Wallet01Icon} size={20} color="currentColor" strokeWidth={1.75} />
@@ -175,7 +175,7 @@ export default function BudgetsPage() {
                 ))}
               </div>
               
-              <div className="p-6 bg-surface/50 border-t border-border flex justify-end items-center gap-4">
+              <div className="p-6 bg-white/90 backdrop-blur-sm border-t border-border flex justify-end items-center gap-4 sticky bottom-0 z-20 rounded-b-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 {success && (
                     <motion.span 
                       initial={{ opacity: 0, x: -10 }} 
