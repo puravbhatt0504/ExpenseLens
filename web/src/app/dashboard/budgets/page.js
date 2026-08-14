@@ -134,7 +134,7 @@ export default function BudgetsPage() {
                 </div>
               </div>
 
-              <div className="p-8">
+              <div className="p-8 pb-28">
                 <h3 className="text-sm font-bold text-foreground mb-4">Category Limits</h3>
                 
                 {categories && Object.entries(
