@@ -15,7 +15,7 @@ export default function LandingPage() {
 
   return (
     <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothTouch: true }}>
-      <main className="min-h-[200vh] bg-background grid-bg overflow-hidden relative">
+      <main className="min-h-[200vh] bg-background bg-[length:40px_40px] bg-[linear-gradient(to_right,rgba(0,0,0,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[position:top_center] overflow-hidden relative">
         <nav className="fixed top-0 left-0 right-0 h-16 flex justify-between items-center px-8 z-50 bg-background/70 backdrop-blur-xl border-b border-border">
           <div className="text-xl font-bold tracking-tight flex items-center gap-2 text-foreground">
             <Hexagon size={20} className="fill-black text-black" />
@@ -24,12 +24,12 @@ export default function LandingPage() {
           <div className="flex gap-6 items-center text-sm font-medium text-text-muted">
             <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/login" className="text-foreground hover:text-text-muted transition-colors">Log In</Link>
-            <Link href="/login" className="btn-primary py-1.5 px-4 text-xs">Get Started</Link>
+            <Link href="/login" className="bg-black text-white px-4 py-1.5 rounded-md font-medium transition-all hover:bg-neutral-800 text-xs">Get Started</Link>
           </div>
         </nav>
 
         <section className="min-h-screen flex flex-col justify-center items-center text-center relative pt-48 pb-20">
-          <div className="page-container relative z-10 w-full flex flex-col items-center">
+          <div className="max-w-[1100px] mx-auto px-[5%] relative z-10 w-full flex flex-col items-center">
             
             <motion.div style={{ opacity: opacityText, y: yText }} className="flex flex-col items-center will-change-transform">
               <motion.div 
@@ -49,13 +49,13 @@ export default function LandingPage() {
               </motion.p>
               
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex gap-4 justify-center items-center flex-wrap">
-                <Link href="/login" className="btn-primary flex items-center gap-2 px-6 py-3 text-sm">
+                <Link href="/login" className="bg-black text-white px-6 py-3 rounded-md font-medium transition-all hover:bg-neutral-800 flex items-center gap-2 text-sm">
                   Start Tracking <ArrowRight size={16} />
                 </Link>
-                <a href="/expenselens.apk" download className="btn-secondary flex items-center gap-2 px-6 py-3 text-sm bg-black text-white border-black hover:bg-black/90 hover:text-white transition-all shadow-md">
+                <a href="/expenselens.apk" download className="bg-white text-black border border-black px-6 py-3 rounded-md font-medium transition-all hover:bg-black/90 hover:text-white shadow-md flex items-center gap-2 text-sm">
                   <Smartphone size={16} /> Download App
                 </a>
-                <Link href="#features" className="btn-secondary px-6 py-3 text-sm">
+                <Link href="#features" className="bg-white text-black border border-border px-6 py-3 rounded-md font-medium transition-all hover:bg-neutral-50 hover:border-neutral-400 text-sm">
                   Explore Features
                 </Link>
               </motion.div>
@@ -66,7 +66,7 @@ export default function LandingPage() {
               initial={{ opacity: 0, y: 150 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-[1100px] mt-24 relative glow-effect will-change-transform"
+              className="w-full max-w-[1100px] mt-24 relative before:absolute before:inset-0 before:p-[1px] before:bg-[linear-gradient(135deg,rgba(0,0,0,0.1),transparent)] before:rounded-inherit before:[mask:linear-gradient(#fff_0_0)_content-box,linear-gradient(#fff_0_0)] before:[mask-composite:exclude] before:pointer-events-none will-change-transform rounded-2xl"
             >
               <div className="bg-white rounded-2xl border border-border shadow-[0_40px_80px_rgba(0,0,0,0.08)] h-[650px] p-2 flex flex-col overflow-hidden">
                 <div className="h-10 border-b border-border flex items-center px-5 gap-2.5 mb-4 bg-surface/50">
@@ -133,7 +133,7 @@ export default function LandingPage() {
         </section>
 
         <section id="features" className="py-40 bg-white border-t border-border relative z-20 overflow-hidden">
-          <div className="page-container">
+          <div className="max-w-[1100px] mx-auto px-[5%]">
             <motion.div 
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}

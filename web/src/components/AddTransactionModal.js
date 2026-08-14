@@ -213,14 +213,14 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                 <button 
                   type="button" 
                   onClick={handleClose}
-                  className="btn-secondary"
+                  className="bg-white text-black border border-border px-6 py-2 rounded-md font-medium text-sm transition-all hover:bg-neutral-50 hover:border-neutral-400"
                   disabled={loading}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="btn-primary flex items-center gap-2"
+                  className="bg-black text-white px-6 py-2 rounded-md font-medium text-sm transition-all hover:bg-neutral-800 flex items-center gap-2"
                   disabled={loading}
                 >
                   {loading ? <HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} className="animate-spin" /> : <HugeiconsIcon icon={FloppyDiskIcon} size={16} color="white" strokeWidth={1.75} />}

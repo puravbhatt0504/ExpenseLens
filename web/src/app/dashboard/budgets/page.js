@@ -12,7 +12,6 @@ import {
 } from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
-import SmoothScroll from '@/components/SmoothScroll';
 import CategoryIcon from '@/components/CategoryIcon';
 
 export default function BudgetsPage() {
@@ -101,7 +100,7 @@ export default function BudgetsPage() {
           <button 
             onClick={saveBudgets}
             disabled={saving}
-            className="btn-primary flex items-center gap-2 text-sm px-4 py-2"
+            className="bg-black text-white px-4 py-2 rounded-md font-medium transition-all hover:bg-neutral-800 flex items-center gap-2 text-sm"
           >
             {saving ? (
               <div className="animate-spin"><HugeiconsIcon icon={HexagonIcon} size={16} color="white" strokeWidth={1.75} /></div>
@@ -112,7 +111,7 @@ export default function BudgetsPage() {
         </div>
       </header>
 
-      <SmoothScroll className="flex-1 overflow-y-auto p-10 bg-surface">
+      <div className="flex-1 overflow-y-auto p-10 bg-surface">
         <div className="max-w-[800px] mx-auto">
           {loading ? (
             <div className="flex justify-center items-center h-[60vh]">
@@ -199,7 +198,7 @@ export default function BudgetsPage() {
             </motion.div>
           )}
         </div>
-      </SmoothScroll>
+      </div>
     </>
   );
 }

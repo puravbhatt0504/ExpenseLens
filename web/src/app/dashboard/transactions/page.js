@@ -65,7 +65,7 @@ export default function TransactionsPage() {
         <h1 className="text-lg font-semibold tracking-tight">Transactions</h1>
         
         <div className="flex items-center gap-2">
-          <button onClick={() => setIsModalOpen(true)} className="btn-primary flex items-center gap-2 mr-4 text-xs py-1.5">
+          <button onClick={() => setIsModalOpen(true)} className="bg-black text-white px-4 py-1.5 rounded-md font-medium transition-all hover:bg-neutral-800 flex items-center gap-2 mr-4 text-xs">
             <HugeiconsIcon icon={PlusSignIcon} size={14} color="white" strokeWidth={1.75} /> Add Transaction
           </button>
           <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-md border border-border bg-white text-text-muted hover:bg-surface transition-colors"><HugeiconsIcon icon={ChevronLeftIcon} size={16} color="currentColor" strokeWidth={1.75} /></button>
