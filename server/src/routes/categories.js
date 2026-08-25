@@ -31,6 +31,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required field: name' });
     }
 
+    // Categories are global and unique by name (case-insensitive) — if one
+    // already exists, hand it back instead of racing the unique index.
+    const { rows: existingRows } = await db.query(
+      'SELECT * FROM categories WHERE lower(name) = lower($1)',
+      [name]
+    );
+    if (existingRows.length > 0) {
+      return res.status(200).json(existingRows[0]);
+    }
+
     if (!icon) {
       // Auto-assign icon based on keywords in the name
       const { rows: iconRows } = await db.query(

@@ -55,33 +55,29 @@ router.post('/', async (req, res) => {
       if (cat) parsedData.categoryId = cat.id;
     }
 
-    // 3c. Keyword heuristics
+    // 3c. Keyword heuristics — mapped to the canonical category names
+    // introduced in migration 017. Resolved by exact (case-insensitive) name
+    // match rather than substring, since post-merge names like "Fuel" and
+    // "Shopping" are too short to safely `.includes()` against.
     if (!parsedData.categoryId) {
-      const foodKw = ['pizza', 'burger', 'chicken', 'biryani', 'restaurant', 'food', 'kitchen', 'cafe', 'oven', 'swiggy', 'zomato', 'items', 'order total'];
-      const groceryKw = ['grocery', 'blinkit', 'instamart', 'bigbasket', 'dmart', 'zepto'];
-      const transportKw = ['uber', 'ola', 'rapido', 'taxi', 'ride', 'auto'];
-      const shoppingKw = ['flipkart', 'amazon', 'myntra', 'meesho', 'mall', 'store'];
-      const billsKw = ['electricity', 'water', 'gas', 'broadband', 'wifi', 'jio', 'airtel', 'vodafone', 'vi ', 'recharge', 'postpaid', 'prepaid'];
-      const entertainmentKw = ['netflix', 'hotstar', 'prime video', 'spotify', 'youtube', 'bookmyshow', 'pvr', 'inox', 'movie'];
+      const KEYWORD_TO_CATEGORY = [
+        { keywords: ['pizza', 'burger', 'chicken', 'biryani', 'restaurant', 'kitchen', 'cafe', 'oven', 'swiggy', 'zomato', 'items', 'order total'], category: 'Eating Out' },
+        { keywords: ['grocery', 'blinkit', 'instamart', 'bigbasket', 'dmart', 'zepto'], category: 'Groceries' },
+        { keywords: ['uber', 'ola', 'rapido', 'taxi', 'ride', 'auto'], category: 'Travel' },
+        { keywords: ['fuel', 'petrol', 'diesel', 'indian oil', 'iocl', 'hpcl', 'bpcl', 'pump'], category: 'Fuel' },
+        { keywords: ['flipkart', 'amazon', 'myntra', 'meesho', 'mall', 'store'], category: 'Shopping' },
+        { keywords: ['electricity', 'power bill', 'tata power', 'adani electricity'], category: 'Electricity' },
+        { keywords: ['jio', 'airtel', 'vodafone', 'vi ', 'recharge', 'postpaid', 'prepaid', 'broadband', 'wifi'], category: 'Mobile & Internet' },
+        { keywords: ['water bill', 'water tanker'], category: 'Water' },
+        { keywords: ['netflix', 'hotstar', 'prime video', 'spotify', 'youtube', 'bookmyshow', 'pvr', 'inox', 'movie'], category: 'Entertainment' },
+        { keywords: ['apollo', 'pharmeasy', 'pharmacy', 'hospital', 'clinic', 'doctor'], category: 'Health & Medical' },
+      ];
 
-      if (foodKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('food'));
-        if (cat) parsedData.categoryId = cat.id;
-      } else if (groceryKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('grocer'));
-        if (cat) parsedData.categoryId = cat.id;
-      } else if (transportKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('transport'));
-        if (cat) parsedData.categoryId = cat.id;
-      } else if (shoppingKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('shop'));
-        if (cat) parsedData.categoryId = cat.id;
-      } else if (billsKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('bill') || c.name.toLowerCase().includes('utilit'));
-        if (cat) parsedData.categoryId = cat.id;
-      } else if (entertainmentKw.some(k => textLower.includes(k))) {
-        const cat = categories.find(c => c.name.toLowerCase().includes('entertain'));
-        if (cat) parsedData.categoryId = cat.id;
+      const categoryByName = new Map(categories.map(c => [c.name.toLowerCase(), c.id]));
+      const match = KEYWORD_TO_CATEGORY.find(({ keywords }) => keywords.some(k => textLower.includes(k)));
+      if (match) {
+        const id = categoryByName.get(match.category.toLowerCase());
+        if (id) parsedData.categoryId = id;
       }
     }
 

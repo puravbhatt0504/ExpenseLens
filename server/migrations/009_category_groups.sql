@@ -2,7 +2,8 @@
 
 ALTER TABLE categories ADD COLUMN IF NOT EXISTS category_group TEXT;
 
-INSERT INTO categories (name, category_group, icon, color) VALUES
+INSERT INTO categories (name, category_group, icon, color)
+SELECT * FROM (VALUES
   ('Grocery', 'Fixed expenses', '🛒', '#FFB347'),
   ('Veg - Fruits', 'Fixed expenses', '🍎', '#FF6B6B'),
   ('Dairy', 'Fixed expenses', '🥛', '#FFFDD0'),
@@ -18,4 +19,6 @@ INSERT INTO categories (name, category_group, icon, color) VALUES
   ('Child Requirement', 'Miscellaneous', '🧸', '#FDFD96'),
   ('Weekend', 'Miscellaneous', '🎉', '#FFB347'),
   ('House Shopping', 'Miscellaneous', '🛍️', '#FF6B6B'),
-  ('Personal', 'Miscellaneous', '👤', '#CFCFC4');
+  ('Personal', 'Miscellaneous', '👤', '#CFCFC4')
+) AS t(name, category_group, icon, color)
+WHERE NOT EXISTS (SELECT 1 FROM categories c WHERE c.name = t.name);
