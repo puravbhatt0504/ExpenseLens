@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon, TransactionIcon, ArrowUpRight01Icon, ArrowDownRight01Icon, FilterIcon, Calendar03Icon, Receipt01Icon } from '@hugeicons/react';
 import CategoryIcon from '@/components/CategoryIcon';
@@ -20,7 +19,6 @@ import AddTransactionModal from '@/components/AddTransactionModal';
 import SmoothScroll from '@/components/SmoothScroll';
 
 export default function TransactionsPage() {
-  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState('date');
   
@@ -29,14 +27,7 @@ export default function TransactionsPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  const { data: transactions, error, isLoading: loading, mutate } = useSWR(`/transactions?month=${currentMonth}`, fetcher, {
-    onError: (err) => {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-      }
-    }
-  });
+  const { data: transactions, error, isLoading: loading, mutate } = useSWR(`/transactions?month=${currentMonth}`, fetcher);
 
   const shiftMonth = (offset) => {
     const [year, month] = currentMonth.split('-').map(Number);

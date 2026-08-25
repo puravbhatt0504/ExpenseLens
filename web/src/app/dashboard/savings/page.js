@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -187,18 +186,10 @@ const AddFundsModal = ({ isOpen, onClose, goal, onSuccess }) => {
 };
 
 export default function SavingsPage() {
-  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(null);
 
-  const { data: goals, error, isLoading, mutate } = useSWR('/savings', fetcher, {
-    onError: (err) => {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-      }
-    }
-  });
+  const { data: goals, error, isLoading, mutate } = useSWR('/savings', fetcher);
 
   const [currentMonth] = useState(() => {
     const d = new Date();

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -155,7 +154,6 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
 };
 
 export default function IncomePage() {
-  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -163,14 +161,7 @@ export default function IncomePage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  const { data: incomes, error, isLoading, mutate } = useSWR(`/incomes?month=${currentMonth}`, fetcher, {
-    onError: (err) => {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-      }
-    }
-  });
+  const { data: incomes, error, isLoading, mutate } = useSWR(`/incomes?month=${currentMonth}`, fetcher);
 
   const shiftMonth = (offset) => {
     const [year, month] = currentMonth.split('-').map(Number);

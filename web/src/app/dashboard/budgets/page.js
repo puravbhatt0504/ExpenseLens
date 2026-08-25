@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -15,7 +14,6 @@ import api, { fetcher } from '@/lib/api';
 import CategoryIcon from '@/components/CategoryIcon';
 
 export default function BudgetsPage() {
-  const router = useRouter();
   const [budgets, setBudgets] = useState({});
   const [totalBudget, setTotalBudget] = useState('');
   const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories?v=3', fetcher);
@@ -35,13 +33,6 @@ export default function BudgetsPage() {
       setTotalBudget(budgetsData.totalBudget || '');
     }
   }, [budgetsData]);
-
-  if (catsError || budgError) {
-    if (catsError?.response?.status === 401 || budgError?.response?.status === 401) {
-      localStorage.removeItem('token');
-      router.push('/login');
-    }
-  }
 
   const handleBudgetChange = (catId, value) => {
     setBudgets(prev => ({

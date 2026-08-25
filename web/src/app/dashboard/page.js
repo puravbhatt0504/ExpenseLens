@@ -153,14 +153,7 @@ export default function DashboardOverview() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  const { data: summary, error, isLoading: loading } = useSWR(`/summary?month=${currentMonth}`, fetcher, {
-    onError: (err) => {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        router.push('/login');
-      }
-    }
-  });
+  const { data: summary, error, isLoading: loading } = useSWR(`/summary?month=${currentMonth}`, fetcher);
 
   const { data: savings, isLoading: loadingSavings, mutate: mutateSavings } = useSWR('/savings', fetcher);
   const [isDistributeOpen, setIsDistributeOpen] = useState(false);

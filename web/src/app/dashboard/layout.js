@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { SWRConfig } from 'swr';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   DashboardSquare01Icon,
@@ -12,13 +13,15 @@ import {
   Logout01Icon,
   HexagonIcon,
 } from '@hugeicons/core-free-icons';
+import AuthGuard from '@/components/AuthGuard';
+import { logout, hardLogout } from '@/lib/auth';
 
-export default function DashboardLayout({ children }) {
+function DashboardChrome({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    await logout();
     router.push('/login');
   };
 
@@ -70,5 +73,23 @@ export default function DashboardLayout({ children }) {
         {children}
       </main>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }) {
+  return (
+    <AuthGuard>
+      <SWRConfig
+        value={{
+          onError: (err) => {
+            if (err.response?.status === 401) {
+              hardLogout();
+            }
+          },
+        }}
+      >
+        <DashboardChrome>{children}</DashboardChrome>
+      </SWRConfig>
+    </AuthGuard>
   );
 }
