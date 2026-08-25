@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
@@ -12,6 +11,8 @@ import 'screens/login_screen.dart';
 import 'screens/income_screen.dart';
 import 'screens/savings_screen.dart';
 import 'theme/app_theme.dart';
+import 'navigation.dart';
+import 'services/auth_service.dart';
 
 import 'screens/budget_screen.dart';
 
@@ -27,6 +28,7 @@ class ExpenseLensApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ExpenseLens',
+      navigatorKey: rootNavigatorKey,
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
@@ -58,15 +60,17 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
-    const storage = FlutterSecureStorage();
-    final hasAuthToken = await storage.containsKey(key: 'auth_token');
+    // Validates the session, not just "is some token present" — a refresh
+    // token that has since expired or been revoked correctly sends the
+    // user back to login instead of into a dashboard full of 401s.
+    final hasValidSession = await AuthService().validateSessionOnLaunch();
 
     if (!mounted) return;
 
     Widget nextScreen;
     if (!hasSeenOnboarding) {
       nextScreen = const OnboardingScreen();
-    } else if (!hasAuthToken) {
+    } else if (!hasValidSession) {
       nextScreen = const LoginScreen();
     } else {
       nextScreen = const AppShell();
@@ -108,7 +112,7 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   final GlobalKey<IncomeScreenState> _incomeKey = GlobalKey();
@@ -119,12 +123,29 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _screens = [
       const DashboardScreen(),
       IncomeScreen(key: _incomeKey),
       const TransactionListScreen(),
       SavingsScreen(key: _savingsKey),
     ];
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Catches the phone-sat-in-a-pocket-overnight case: the access token
+    // (and possibly the refresh token) may have gone stale while the app
+    // was backgrounded.
+    if (state == AppLifecycleState.resumed) {
+      AuthService().ensureValidSession();
+    }
   }
 
   @override

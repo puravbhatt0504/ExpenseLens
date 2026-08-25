@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 import '../main.dart';
@@ -16,38 +15,21 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email'],
-    serverClientId: '264648333363-2qmdh3i22gk2rhittp3cuitn06v21ev5.apps.googleusercontent.com',
-  );
-  
   bool _isLoading = false;
+  bool _shownExpiredMessage = false;
 
   Future<void> _handleSignIn() async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
-      if (account == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
+      final api = ref.read(apiClientProvider);
+      await api.loginWithGoogle();
 
-      final GoogleSignInAuthentication auth = await account.authentication;
-      final String? idToken = auth.idToken;
-
-      if (idToken != null) {
-        final api = ref.read(apiClientProvider);
-        await api.loginWithGoogle(idToken);
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const AppShell()),
-        );
-      } else {
-        throw Exception('Failed to get ID token from Google');
-      }
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AppShell()),
+      );
     } catch (error) {
       if (!mounted) return;
       String errMsg = error.toString();
@@ -66,6 +48,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (!_shownExpiredMessage && args is Map && args['reason'] == 'expired') {
+      _shownExpiredMessage = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Your session expired — please sign in again.')),
+        );
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(

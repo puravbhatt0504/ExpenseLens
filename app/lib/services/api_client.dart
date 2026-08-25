@@ -1,18 +1,20 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../models/summary.dart';
 import '../models/income.dart';
 import '../models/savings_goal.dart';
+import 'auth_service.dart';
 
 /// API client service wrapping all REST calls to the ExpenseLens backend.
 class ApiClient {
   final Dio _dio;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final AuthService _auth = AuthService();
 
   // Updated to your deployed API URL
   static const String _baseUrl = 'https://server-seven-gamma-95.vercel.app';
+
+  static const _publicPaths = ['/auth/login', '/auth/refresh', '/categories'];
 
   ApiClient({String? baseUrl})
       : _dio = Dio(
@@ -28,41 +30,65 @@ class ApiClient {
     _initInterceptors();
   }
 
+  bool _isPublic(String path) => _publicPaths.any((p) => path.startsWith(p));
+
   void _initInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Skip token check for login and public routes
-          if (options.path == '/auth/login' || options.path.startsWith('/categories')) {
+          if (_isPublic(options.path)) {
             return handler.next(options);
           }
-          
-          final token = await _storage.read(key: 'auth_token');
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-            return handler.next(options);
-          } else {
-            // If token is missing for protected routes, throw an error.
+
+          // Refresh ahead of expiry rather than waiting for a 401 — keeps
+          // the common case from ever seeing an auth error.
+          if (_auth.accessTokenExpiringSoon) {
+            await _auth.refresh();
+          }
+
+          final token = _auth.accessToken;
+          if (token == null) {
+            await _auth.forceLogout();
             return handler.reject(
               DioException(
                 requestOptions: options,
-                error: 'Session expired. Please restart the app and log in again.',
+                error: 'Your session expired. Please sign in again.',
               ),
             );
           }
+
+          options.headers['Authorization'] = 'Bearer $token';
+          return handler.next(options);
         },
         onError: (error, handler) async {
+          final code = (error.response?.data is Map) ? error.response!.data['code'] : null;
+          final alreadyRetried = error.requestOptions.extra['retried'] == true;
+
+          if (error.response?.statusCode == 401 && code == 'TOKEN_EXPIRED' && !alreadyRetried) {
+            final refreshed = await _auth.refresh();
+            if (refreshed) {
+              try {
+                final retryOptions = error.requestOptions;
+                retryOptions.extra['retried'] = true;
+                retryOptions.headers['Authorization'] = 'Bearer ${_auth.accessToken}';
+                final response = await _dio.fetch(retryOptions);
+                return handler.resolve(response);
+              } catch (_) {
+                // Fall through to force-logout below.
+              }
+            }
+          }
+
           if (error.response?.statusCode == 401) {
-            // Handle unauthorized (e.g., clear token)
-            await _storage.delete(key: 'auth_token');
+            await _auth.forceLogout();
             error = DioException(
               requestOptions: error.requestOptions,
               response: error.response,
-              error: 'Session expired. Please restart the app and log in again.',
+              error: 'Your session expired. Please sign in again.',
             );
           }
           return handler.next(error);
-        }
+        },
       ),
     );
   }
@@ -70,17 +96,9 @@ class ApiClient {
   // ---------------------------------------------------------------------------
   // Auth
   // ---------------------------------------------------------------------------
-  Future<void> loginWithGoogle(String idToken) async {
-    await _dio.post('/auth/login', data: {'idToken': idToken});
-    // The backend just returns the user object, and we can keep using the idToken as our API token 
-    // since the backend verifies it. Or if the backend returned a custom token, we'd save that.
-    // Here we save the Google ID token to send as Bearer for future requests.
-    await _storage.write(key: 'auth_token', value: idToken);
-  }
+  Future<void> loginWithGoogle() => _auth.signInWithGoogle();
 
-  Future<void> logout() async {
-    await _storage.delete(key: 'auth_token');
-  }
+  Future<void> logout() => _auth.logout();
 
   Future<Map<String, dynamic>> getUser() async {
     final res = await _dio.get('/auth/me');
