@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/providers.dart';
 import '../models/transaction.dart';
-import '../utils/circum_icons.dart';
+import '../widgets/category_icon.dart';
 
 /// Add Transaction screen — manual expense entry form.
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -241,17 +240,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                       value: cat.id,
                       child: Row(
                         children: [
-                          (cat.icon != null && cat.icon!.startsWith('circum:') && circumIcons.containsKey(cat.icon))
-                              ? SvgPicture.string(
-                                  circumIcons[cat.icon]!,
-                                  width: 24,
-                                  height: 24,
-                                  colorFilter: ColorFilter.mode(
-                                      Theme.of(context).colorScheme.onSurface,
-                                      BlendMode.srcIn),
-                                )
-                              : Text(cat.icon ?? '📌',
-                                  style: const TextStyle(fontSize: 20)),
+                          CategoryIconView(
+                            iconKey: cat.icon,
+                            size: 22,
+                            legacyColor: Theme.of(context).colorScheme.onSurface,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(

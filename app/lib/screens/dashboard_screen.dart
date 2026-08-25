@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
+import '../widgets/category_icon.dart';
 import '../theme/app_theme.dart';
 import '../models/savings_goal.dart';
-import '../utils/circum_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 /// Dashboard screen — displays monthly spend, income, and category breakdown chart.
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -611,20 +610,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           width: 48,
                                           height: 48,
                                           decoration: BoxDecoration(
-                                            color: _parseColor(cat.categoryColor).withValues(alpha: 0.15),
+                                            color: _parseColor(cat.categoryColor),
                                             borderRadius: BorderRadius.circular(16),
                                           ),
                                           alignment: Alignment.center,
-                                          child: (cat.categoryIcon.startsWith('circum:') && circumIcons.containsKey(cat.categoryIcon))
-                                              ? SvgPicture.string(
-                                                  circumIcons[cat.categoryIcon]!,
-                                                  width: 24,
-                                                  height: 24,
-                                                  colorFilter: ColorFilter.mode(
-                                                      Theme.of(context).colorScheme.onSurface,
-                                                      BlendMode.srcIn),
-                                                )
-                                              : Text(cat.categoryIcon, style: const TextStyle(fontSize: 24)),
+                                          child: CategoryIconView(
+                                            iconKey: cat.categoryIcon,
+                                            size: 26,
+                                            legacyColor: Theme.of(context).colorScheme.onSurface,
+                                          ),
                                         ),
                                         const SizedBox(width: 16),
                                         Expanded(

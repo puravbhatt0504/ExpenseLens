@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
-import '../utils/circum_icons.dart';
+import 'category_icon.dart';
 
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -56,12 +54,16 @@ class TransactionCard extends StatelessWidget {
                   height: 50,
                   decoration: BoxDecoration(
                     color: isCategorized
-                        ? _parseColor(category!.color).withValues(alpha: 0.15)
+                        ? _parseColor(category!.color)
                         : Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Center(
-                    child: _buildIcon(category?.icon, iconColor),
+                    child: CategoryIconView(
+                      iconKey: category?.icon,
+                      size: 26,
+                      legacyColor: iconColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -135,78 +137,4 @@ class TransactionCard extends StatelessWidget {
     return AppTheme.primary;
   }
 
-  /// Maps category icon string keys to Hugeicons stroke-rounded SVG data.
-  /// Returns `List<List<dynamic>>` as expected by HugeIcon widget.
-  /// 🍎 Food: apple icon (healthy choice instead of burger)
-  /// 🔲 Other/default: grid view icon
-  Widget _buildIcon(String? iconName, Color color) {
-    if (iconName != null && iconName.startsWith('circum:')) {
-      final svgString = circumIcons[iconName];
-      if (svgString != null) {
-        return SvgPicture.string(
-          svgString,
-          width: 24,
-          height: 24,
-          colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-        );
-      }
-    }
-    return HugeIcon(
-      icon: _getCategoryIconData(iconName),
-      color: color,
-      size: 24.0,
-    );
-  }
-
-  List<List<dynamic>> _getCategoryIconData(String? iconName) {
-    switch (iconName) {
-      // 🍎 Food: apple icon for a healthy look
-      case 'fastfood':
-      case 'food':
-      case 'restaurant':
-        return HugeIcons.strokeRoundedApple01;
-
-      case 'directions_car':
-      case 'car':
-      case 'transport':
-        return HugeIcons.strokeRoundedCar01;
-
-      case 'shopping_cart':
-      case 'shopping':
-        return HugeIcons.strokeRoundedShoppingCart01;
-
-      case 'receipt':
-      case 'bills':
-        return HugeIcons.strokeRoundedReceiptDollar;
-
-      case 'home':
-      case 'house':
-        return HugeIcons.strokeRoundedHome01;
-
-      case 'movie':
-      case 'entertainment':
-        return HugeIcons.strokeRoundedFilm01;
-
-      case 'local_hospital':
-      case 'health':
-      case 'medical':
-        return HugeIcons.strokeRoundedHospital01;
-
-      case 'school':
-      case 'education':
-        return HugeIcons.strokeRoundedSchool01;
-
-      case 'flight':
-      case 'travel':
-        return HugeIcons.strokeRoundedPlane;
-
-      case 'attach_money':
-      case 'finance':
-        return HugeIcons.strokeRoundedMoney01;
-
-      // 🔲 Other/default: grid view instead of generic pin
-      default:
-        return HugeIcons.strokeRoundedGridView;
-    }
-  }
 }

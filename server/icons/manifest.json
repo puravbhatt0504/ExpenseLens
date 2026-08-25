@@ -1,0 +1,23 @@
+{
+  "el:groceries": { "label": "Groceries", "source": "iconify", "id": "shopping-cart", "chip": "#FFE8CC" },
+  "el:produce": { "label": "Fruits & Vegetables", "source": "iconify", "id": "carrot", "chip": "#E3F5D4" },
+  "el:dairy": { "label": "Dairy", "source": "custom", "file": "custom/milk-pouch.svg", "chip": "#DCEBFA" },
+  "el:rent": { "label": "House Rent", "source": "iconify", "id": "house", "chip": "#EFE6DA" },
+  "el:electricity": { "label": "Electricity", "source": "iconify", "id": "light-bulb", "chip": "#FFF3C4" },
+  "el:mobile": { "label": "Mobile & Internet", "source": "iconify", "id": "mobile-phone", "chip": "#DCEAFB" },
+  "el:tv": { "label": "TV & Subscriptions", "source": "iconify", "id": "television", "chip": "#E9E1F7" },
+  "el:gas": { "label": "Cooking Gas", "source": "custom", "file": "custom/lpg-cylinder.svg", "chip": "#FBE0DF" },
+  "el:water": { "label": "Water", "source": "iconify", "id": "droplet", "chip": "#D9F1FA" },
+  "el:fuel": { "label": "Fuel", "source": "iconify", "id": "fuel-pump", "chip": "#FDE3F5" },
+  "el:school": { "label": "School Fees", "source": "iconify", "id": "graduation-cap", "chip": "#D6F5F5" },
+  "el:eating-out": { "label": "Eating Out", "source": "iconify", "id": "fork-and-knife-with-plate", "chip": "#FFE6D1" },
+  "el:shopping": { "label": "Shopping", "source": "iconify", "id": "shopping-bags", "chip": "#DFF6E3" },
+  "el:entertainment": { "label": "Entertainment", "source": "iconify", "id": "clapper-board", "chip": "#EBE0FA" },
+  "el:travel": { "label": "Travel", "source": "iconify", "id": "airplane", "chip": "#D6F2EF" },
+  "el:health": { "label": "Health & Medical", "source": "iconify", "id": "pill", "chip": "#FDE1E1" },
+  "el:kids": { "label": "Kids", "source": "iconify", "id": "teddy-bear", "chip": "#FEE7EF" },
+  "el:pets": { "label": "Pets", "source": "iconify", "id": "dog-face", "chip": "#F5E9D8" },
+  "el:personal": { "label": "Personal Care", "source": "iconify", "id": "soap", "chip": "#E0F3F8" },
+  "el:transfers": { "label": "Transfers", "source": "custom", "file": "custom/rupee-note.svg", "chip": "#D7F0EC" },
+  "el:misc": { "label": "Miscellaneous", "source": "iconify", "id": "round-pushpin", "chip": "#E7E7E7" }
+}

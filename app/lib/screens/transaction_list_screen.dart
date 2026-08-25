@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
 
 import '../models/transaction.dart';
-import '../utils/circum_icons.dart';
 import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
+import '../widgets/category_icon.dart';
 
 /// Transaction List screen — shows transactions grouped by date for the selected month.
 class TransactionListScreen extends ConsumerStatefulWidget {
@@ -322,20 +321,15 @@ class _TransactionTile extends ConsumerWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: categoryColor.withValues(alpha: 0.15),
+            color: categoryColor,
             borderRadius: BorderRadius.circular(16),
           ),
           alignment: Alignment.center,
-          child: iconText.startsWith('circum:') 
-              ? (circumIcons[iconText] != null 
-                  ? SvgPicture.string(
-                      circumIcons[iconText]!,
-                      width: 24,
-                      height: 24,
-                      colorFilter: ColorFilter.mode(categoryColor, BlendMode.srcIn),
-                    )
-                  : const Icon(Icons.category))
-              : Text(iconText, style: const TextStyle(fontSize: 24)),
+          child: CategoryIconView(
+            iconKey: iconText,
+            size: 26,
+            legacyColor: categoryColor,
+          ),
         ),
         title: Text(
           transaction.merchant ?? transaction.note ?? 'Transaction',

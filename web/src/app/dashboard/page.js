@@ -182,7 +182,7 @@ export default function DashboardOverview() {
         <div className="bg-white border border-border p-3 rounded-lg shadow-md text-sm font-medium">
           {data.categoryName ? (
             <div className="flex items-center gap-2 mt-2 font-semibold">
-              <CategoryIcon icon={data.categoryIcon} className="w-4 h-4" />
+              <CategoryIcon icon={data.categoryIcon} className="w-5 h-5" />
               <span>{data.categoryName}</span>
             </div>
           ) : (
@@ -401,8 +401,8 @@ export default function DashboardOverview() {
                       <div className="flex flex-col gap-3 max-h-[220px] overflow-y-auto pr-2">
                         {summary.byCategory.map((cat, i) => (
                           <div key={cat.categoryId || i} className="flex items-center gap-3 p-2.5 rounded-lg border border-border/50 bg-surface/30 hover:bg-surface transition-colors">
-                            <div className="w-8 h-8 rounded-full bg-white border border-border flex justify-center items-center text-sm shadow-sm shrink-0" style={{ color: cat.categoryColor || '#000' }}>
-                              <CategoryIcon icon={cat.categoryIcon} className="w-4 h-4" />
+                            <div className="w-9 h-9 rounded-full flex justify-center items-center shadow-sm shrink-0" style={{ backgroundColor: cat.categoryColor || '#EEE' }}>
+                              <CategoryIcon icon={cat.categoryIcon} className="w-5 h-5" />
                             </div>
                             <div className="flex-1 overflow-hidden">
                               <div className="flex justify-between items-end mb-1">

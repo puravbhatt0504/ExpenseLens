@@ -166,10 +166,10 @@ export default function TransactionsPage() {
                           </td>
                           <td className="py-4 px-6">
                             <span className="inline-flex items-center gap-2 font-semibold">
-                              <span className="w-5 h-5 rounded-full flex items-center justify-center bg-surface border border-border text-[10px] shadow-sm shrink-0"
-                                style={{ color: txn.category_color || '#000' }}
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm shrink-0"
+                                style={{ backgroundColor: txn.category_color || '#EEE' }}
                               >
-                                <CategoryIcon icon={txn.category_icon} className="w-3.5 h-3.5" />
+                                <CategoryIcon icon={txn.category_icon} className="w-4 h-4" />
                               </span>
                               {txn.category_name || 'Uncategorized'}
                             </span>

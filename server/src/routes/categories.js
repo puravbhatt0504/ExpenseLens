@@ -10,11 +10,16 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT id, name, category_group, icon, color FROM categories ORDER BY category_group NULLS LAST, name /* Cache bust */'
+      'SELECT id, name, category_group, icon, color FROM categories ORDER BY category_group NULLS LAST, name'
     );
-    // Cache categories aggressively (1 hour at edge, 1 hour at browser)
-    // Categories are shared across all users and rarely change
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, max-age=3600');
+    // Categories are shared across all users and rarely change, but a
+    // 1-hour edge cache (the old value here) meant an icon/colour fix
+    // stayed invisible for up to an hour with no way to force a refresh
+    // short of a redeploy. A short s-maxage plus stale-while-revalidate
+    // keeps the common case fast while making changes show up promptly;
+    // Express's default ETag (content hash, see app-wide config) still
+    // handles conditional GETs for free once a request reaches origin.
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
     res.json(rows);
   } catch (err) {
     console.error('GET /categories error:', err);

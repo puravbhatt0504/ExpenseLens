@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../providers/providers.dart';
 import '../models/summary.dart';
 import '../theme/app_theme.dart';
-import '../utils/circum_icons.dart';
+import '../widgets/category_icon.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 class BudgetScreen extends ConsumerStatefulWidget {
   const BudgetScreen({super.key});
@@ -186,20 +185,15 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.15),
+                            color: color,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           alignment: Alignment.center,
-                          child: (cat.categoryIcon.startsWith('circum:') && circumIcons.containsKey(cat.categoryIcon))
-                              ? SvgPicture.string(
-                                  circumIcons[cat.categoryIcon]!,
-                                  width: 20,
-                                  height: 20,
-                                  colorFilter: ColorFilter.mode(
-                                      Theme.of(context).colorScheme.onSurface,
-                                      BlendMode.srcIn),
-                                )
-                              : Text(cat.categoryIcon, style: const TextStyle(fontSize: 20)),
+                          child: CategoryIconView(
+                            iconKey: cat.categoryIcon,
+                            size: 22,
+                            legacyColor: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Text(

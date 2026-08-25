@@ -18,7 +18,7 @@ export default function BudgetsPage() {
   const router = useRouter();
   const [budgets, setBudgets] = useState({});
   const [totalBudget, setTotalBudget] = useState('');
-  const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories?v=2', fetcher);
+  const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories?v=3', fetcher);
   const { data: budgetsData, error: budgError, isLoading: budgLoading, mutate: mutateBudgets } = useSWR('/budgets', fetcher);
 
   const loading = catsLoading || budgLoading;
@@ -174,8 +174,8 @@ export default function BudgetsPage() {
                       {cats.map((cat) => (
                         <div key={cat.id} className="flex flex-col gap-2">
                           <label className="flex items-center gap-2 text-sm font-semibold">
-                            <span className="w-6 h-6 rounded-full flex items-center justify-center bg-surface border border-border text-xs shadow-sm" style={{ color: cat.color }}>
-                              <CategoryIcon icon={cat.icon} className="w-3.5 h-3.5" />
+                            <span className="w-8 h-8 rounded-full flex items-center justify-center shadow-sm" style={{ backgroundColor: cat.color }}>
+                              <CategoryIcon icon={cat.icon} className="w-[18px] h-[18px]" />
                             </span>
                             {cat.name}
                           </label>
