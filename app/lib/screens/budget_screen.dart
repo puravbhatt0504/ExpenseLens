@@ -110,141 +110,158 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 100),
-        children: [
-          // Total Budget Section
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'Total Monthly Budget',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _InteractiveBudgetBar(
-                  value: _totalBudget ?? 0,
-                  maxLimit: 200000,
-                  accentColor: theme.colorScheme.primary,
-                  onChanged: (val) {
-                    setState(() {
-                      _totalBudget = val == 0 ? null : val;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ).animate().slideY(begin: -0.2, end: 0, duration: 400.ms),
+      body: Builder(
+        builder: (context) {
+          final budgetableCategories =
+              _currentSummary!.byCategory.where((c) => c.categoryId != null).toList();
 
-          const SizedBox(height: 32),
-          
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              'Category Budgets',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          ..._currentSummary!.byCategory.where((c) => c.categoryId != null).map((cat) {
-            final catBudget = _categoryBudgets[cat.categoryId!] ?? 0.0;
-            final color = _parseColor(cat.categoryColor);
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.cardTheme.color ?? theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
+          // ListView.builder so only the on-screen category rows are built —
+          // the header (total-budget card + section title) is item 0, and
+          // budgetableCategories[index - 1] fills every row after it.
+          return ListView.builder(
+            padding: const EdgeInsets.only(bottom: 100),
+            itemCount: budgetableCategories.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.center,
-                          child: CategoryIconView(
-                            iconKey: cat.categoryIcon,
-                            size: 22,
-                            legacyColor: Theme.of(context).colorScheme.onSurface,
-                          ),
+                    // Total Budget Section
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(32),
+                          bottomRight: Radius.circular(32),
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          cat.categoryName,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        if (catBudget == 0)
-                          TextButton.icon(
-                            onPressed: () {
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Total Monthly Budget',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _InteractiveBudgetBar(
+                            value: _totalBudget ?? 0,
+                            maxLimit: 200000,
+                            accentColor: theme.colorScheme.primary,
+                            onChanged: (val) {
                               setState(() {
-                                _categoryBudgets[cat.categoryId!] = 5000;
-                              });
-                            },
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Add'),
-                          )
-                        else
-                          IconButton(
-                            icon: Icon(Icons.close, color: theme.colorScheme.error, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _categoryBudgets.remove(cat.categoryId!);
+                                _totalBudget = val == 0 ? null : val;
                               });
                             },
                           ),
-                      ],
+                        ],
+                      ),
+                    ).animate().slideY(begin: -0.2, end: 0, duration: 400.ms),
+
+                    const SizedBox(height: 32),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        'Category Budgets',
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    if (catBudget > 0) ...[
-                      const SizedBox(height: 16),
-                      _InteractiveBudgetBar(
-                        value: catBudget,
-                        maxLimit: 50000,
-                        accentColor: color,
-                        onChanged: (val) {
-                          setState(() {
-                            if (val == 0) {
-                              _categoryBudgets.remove(cat.categoryId!);
-                            } else {
-                              _categoryBudgets[cat.categoryId!] = val;
-                            }
-                          });
-                        },
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }
+
+              final cat = budgetableCategories[index - 1];
+              final catBudget = _categoryBudgets[cat.categoryId!] ?? 0.0;
+              final color = _parseColor(cat.categoryColor);
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: theme.cardTheme.color ?? theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
-                  ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: CategoryIconView(
+                              iconKey: cat.categoryIcon,
+                              size: 22,
+                              legacyColor: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            cat.categoryName,
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const Spacer(),
+                          if (catBudget == 0)
+                            TextButton.icon(
+                              onPressed: () {
+                                setState(() {
+                                  _categoryBudgets[cat.categoryId!] = 5000;
+                                });
+                              },
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Add'),
+                            )
+                          else
+                            IconButton(
+                              icon: Icon(Icons.close, color: theme.colorScheme.error, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  _categoryBudgets.remove(cat.categoryId!);
+                                });
+                              },
+                            ),
+                        ],
+                      ),
+                      if (catBudget > 0) ...[
+                        const SizedBox(height: 16),
+                        _InteractiveBudgetBar(
+                          value: catBudget,
+                          maxLimit: 50000,
+                          accentColor: color,
+                          onChanged: (val) {
+                            setState(() {
+                              if (val == 0) {
+                                _categoryBudgets.remove(cat.categoryId!);
+                              } else {
+                                _categoryBudgets[cat.categoryId!] = val;
+                              }
+                            });
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
-        ],
+              );
+            },
+          );
+        },
       ),
     );
   }
