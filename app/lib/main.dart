@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +19,23 @@ import 'screens/budget_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // The app targets SDK 36, and since Android 15 edge-to-edge is enforced —
+  // the app always draws behind the status and navigation bars, and the old
+  // opt-out flag no longer exists. That makes the *icon* brightness our
+  // responsibility: on a 3-button device the back/home/recents glyphs are
+  // drawn by the system over whatever we render underneath, so without this
+  // they can come out light-on-light against our light theme and effectively
+  // disappear. Transparent bars let NavigationBar's own surface show through.
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.dark,
+    statusBarBrightness: Brightness.light, // iOS
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemNavigationBarContrastEnforced: false,
+  ));
+
   runApp(const ProviderScope(child: ExpenseLensApp()));
 }
 
@@ -152,35 +170,41 @@ class _AppShellState extends State<AppShell> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
-      bottomNavigationBar: SafeArea(
-        child: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            setState(() => _currentIndex = index);
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.trending_up_outlined),
-              selectedIcon: Icon(Icons.trending_up),
-              label: 'Income',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long),
-              label: 'Expenses',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.savings_outlined),
-              selectedIcon: Icon(Icons.savings),
-              label: 'Savings',
-            ),
-          ],
-        ),
+      // No SafeArea here on purpose. Material 3's NavigationBar already reads
+      // the bottom system inset and extends its own surface behind the system
+      // navigation bar, padding its icons up out of the way. Wrapping it in a
+      // SafeArea instead strips that inset from the child and re-adds it as
+      // *external* padding, so the bar floats above the system buttons with a
+      // band of bare Scaffold background showing underneath — ~24dp on gesture
+      // navigation (easy to miss) but ~48dp on 3-button navigation, where it
+      // reads as an obvious dead stripe and eats usable height.
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() => _currentIndex = index);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.trending_up_outlined),
+            selectedIcon: Icon(Icons.trending_up),
+            label: 'Income',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Expenses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.savings_outlined),
+            selectedIcon: Icon(Icons.savings),
+            label: 'Savings',
+          ),
+        ],
       ),
       floatingActionButton: _buildFab(),
     );
