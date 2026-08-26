@@ -1,6 +1,9 @@
+# Keep CLI deploys from the repo root scoped to the web app.
+# NOTE: do NOT add "*.apk" here — web/public/expenselens.apk is the binary the
+# landing page's Download button serves. The Flutter build artifacts that made
+# deploys huge all live under /app/, which is already excluded below.
 node_modules/
 .git/
 /app/
 server/scratch/
 server/eng.traineddata
-*.apk
