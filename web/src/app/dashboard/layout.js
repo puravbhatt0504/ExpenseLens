@@ -86,6 +86,9 @@ export default function DashboardLayout({ children }) {
               hardLogout();
             }
           },
+          revalidateOnFocus: false,
+          dedupingInterval: 60_000,
+          keepPreviousData: true,
         }}
       >
         <DashboardChrome>{children}</DashboardChrome>
