@@ -38,10 +38,13 @@ const VERCEL_PREVIEW_ORIGIN = /^https:\/\/web-[a-z0-9]+-purav-bhatts-projects\.v
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || VERCEL_PREVIEW_ORIGIN.test(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
+    // Pass `false`, not an Error — CORS is enforced by the browser refusing
+    // to expose the response to JS when Access-Control-Allow-Origin is
+    // missing. The request itself is harmless to let complete: passing an
+    // Error here instead turns every disallowed-origin request into an
+    // unhandled 500 from Express's default error handler.
+    const allowed = !origin || ALLOWED_ORIGINS.includes(origin) || VERCEL_PREVIEW_ORIGIN.test(origin);
+    callback(null, allowed);
   },
 }));
 app.use(express.json());
