@@ -4,6 +4,7 @@
 const { Router } = require('express');
 const PDFDocument = require('pdfkit-table');
 const db = require('../db');
+const { MONTH_FORMAT, monthStart } = require('../lib/dateRange');
 
 const router = Router();
 
@@ -26,42 +27,54 @@ router.get('/', async (req, res) => {
   try {
     const { month } = req.query;
 
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    if (!month || !MONTH_FORMAT.test(month)) {
       return res.status(400).json({ error: 'month query param required in YYYY-MM format' });
     }
+    const start = monthStart(month);
 
     // 1. Fetch summary data
     const summaryQuery = `
-      SELECT 
+      SELECT
         COUNT(t.id) as count,
         COALESCE(SUM(t.amount), 0) as total
       FROM transactions t
-      WHERE to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
+      WHERE t.user_id = $2
+        AND t.txn_date >= $1::date
+        AND t.txn_date < ($1::date + INTERVAL '1 month')
     `;
-    const { rows: summaryRows } = await db.query(summaryQuery, [month, req.user.id]);
-    const total = parseFloat(summaryRows[0].total);
 
     // 2. Fetch category breakdown
     const categoryQuery = `
-      SELECT 
+      SELECT
         c.id, c.name, c.color, COALESCE(SUM(t.amount), 0) as amount
       FROM categories c
-      LEFT JOIN transactions t ON c.id = t.category_id AND to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
+      LEFT JOIN transactions t ON c.id = t.category_id
+        AND t.user_id = $2
+        AND t.txn_date >= $1::date
+        AND t.txn_date < ($1::date + INTERVAL '1 month')
       GROUP BY c.id, c.name, c.color
       HAVING COALESCE(SUM(t.amount), 0) > 0
       ORDER BY amount DESC
     `;
-    const { rows: categoryRows } = await db.query(categoryQuery, [month, req.user.id]);
 
     // 3. Fetch transactions list
     const transactionsQuery = `
       SELECT t.amount, t.txn_date, t.merchant, t.note, c.name AS category_name
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
+      WHERE t.user_id = $2
+        AND t.txn_date >= $1::date
+        AND t.txn_date < ($1::date + INTERVAL '1 month')
       ORDER BY t.txn_date DESC, t.created_at DESC
     `;
-    const { rows: transactionRows } = await db.query(transactionsQuery, [month, req.user.id]);
+
+    // Independent reads — issue concurrently.
+    const [{ rows: summaryRows }, { rows: categoryRows }, { rows: transactionRows }] = await Promise.all([
+      db.query(summaryQuery, [start, req.user.id]),
+      db.query(categoryQuery, [start, req.user.id]),
+      db.query(transactionsQuery, [start, req.user.id]),
+    ]);
+    const total = parseFloat(summaryRows[0].total);
 
     // 4. Initialize PDF Document
     const doc = new PDFDocument({ margin: 0, size: 'A4' });

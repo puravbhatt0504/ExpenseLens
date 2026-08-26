@@ -3,6 +3,7 @@
  */
 const { Router } = require('express');
 const db = require('../db');
+const { MONTH_FORMAT, monthStart } = require('../lib/dateRange');
 
 const router = Router();
 
@@ -10,31 +11,29 @@ const router = Router();
 router.get('/', async (req, res) => {
   try {
     const { month } = req.query;
-    if (!month) {
-      return res.status(400).json({ error: 'Missing query parameter: month (YYYY-MM)' });
+    if (!month || !MONTH_FORMAT.test(month)) {
+      return res.status(400).json({ error: 'Missing or invalid query parameter: month (YYYY-MM)' });
     }
+    const start = monthStart(month);
 
-    // 1. Get total spend and transaction count
+    // These five queries are all independent reads — issue them concurrently
+    // instead of awaiting one at a time.
     const totalQuery = `
       SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total
       FROM transactions
-      WHERE to_char(txn_date, 'YYYY-MM') = $1 AND user_id = $2
+      WHERE user_id = $2
+        AND txn_date >= $1::date
+        AND txn_date < ($1::date + INTERVAL '1 month')
     `;
-    const totalResult = await db.query(totalQuery, [month, req.user.id]);
-    const { count, total } = totalResult.rows[0];
-
-    // 1b. Get total income
     const incomeQuery = `
       SELECT COALESCE(SUM(amount), 0) as total_income
       FROM incomes
-      WHERE to_char(date, 'YYYY-MM') = $1 AND user_id = $2
+      WHERE user_id = $2
+        AND date >= $1::date
+        AND date < ($1::date + INTERVAL '1 month')
     `;
-    const incomeResult = await db.query(incomeQuery, [month, req.user.id]);
-    const totalIncome = incomeResult.rows[0].total_income;
-
-    // 2. Get category breakdown
     const categoryQuery = `
-      SELECT 
+      SELECT
         c.id as category_id,
         c.name as category_name,
         c.icon as category_icon,
@@ -42,23 +41,29 @@ router.get('/', async (req, res) => {
         COALESCE(SUM(t.amount), 0) as amount
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
-      WHERE to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
+      WHERE t.user_id = $2
+        AND t.txn_date >= $1::date
+        AND t.txn_date < ($1::date + INTERVAL '1 month')
       GROUP BY c.id, c.name, c.icon, c.color
       ORDER BY amount DESC
     `;
-    const categoryResult = await db.query(categoryQuery, [month, req.user.id]);
-
-    // 3. Get user's total budget
-    const userResult = await db.query('SELECT monthly_budget FROM users WHERE id = $1', [req.user.id]);
-    const totalBudget = userResult.rows[0]?.monthly_budget ? parseFloat(userResult.rows[0].monthly_budget) : null;
-
-    // 4. Get category budgets
     const budgetQuery = `
       SELECT category_id, budget_amount
       FROM user_category_budgets
       WHERE user_id = $1
     `;
-    const budgetResult = await db.query(budgetQuery, [req.user.id]);
+
+    const [totalResult, incomeResult, categoryResult, userResult, budgetResult] = await Promise.all([
+      db.query(totalQuery, [start, req.user.id]),
+      db.query(incomeQuery, [start, req.user.id]),
+      db.query(categoryQuery, [start, req.user.id]),
+      db.query('SELECT monthly_budget FROM users WHERE id = $1', [req.user.id]),
+      db.query(budgetQuery, [req.user.id]),
+    ]);
+
+    const { count, total } = totalResult.rows[0];
+    const totalIncome = incomeResult.rows[0].total_income;
+    const totalBudget = userResult.rows[0]?.monthly_budget ? parseFloat(userResult.rows[0].monthly_budget) : null;
     const budgetMap = {};
     for (const row of budgetResult.rows) {
       budgetMap[row.category_id] = parseFloat(row.budget_amount);

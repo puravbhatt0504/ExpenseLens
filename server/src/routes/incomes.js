@@ -8,6 +8,7 @@
  */
 const { Router } = require('express');
 const db = require('../db');
+const { MONTH_FORMAT, monthStart } = require('../lib/dateRange');
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.get('/', async (req, res) => {
   try {
     const { month } = req.query;
 
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    if (!month || !MONTH_FORMAT.test(month)) {
       return res.status(400).json({
         error: 'month query param required in YYYY-MM format',
       });
@@ -52,9 +53,11 @@ router.get('/', async (req, res) => {
 
     const { rows } = await db.query(
       `SELECT * FROM incomes
-       WHERE to_char(date, 'YYYY-MM') = $1 AND user_id = $2
+       WHERE user_id = $2
+         AND date >= $1::date
+         AND date < ($1::date + INTERVAL '1 month')
        ORDER BY date DESC, created_at DESC`,
-      [month, req.user.id]
+      [monthStart(month), req.user.id]
     );
 
     const mappedRows = rows.map(r => ({

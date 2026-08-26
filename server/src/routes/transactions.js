@@ -8,6 +8,7 @@
  */
 const { Router } = require('express');
 const db = require('../db');
+const { MONTH_FORMAT, monthStart } = require('../lib/dateRange');
 
 const router = Router();
 
@@ -41,14 +42,21 @@ router.post('/', async (req, res) => {
     const transaction = rows[0];
     transaction.amount = parseFloat(transaction.amount);
 
-    // If there was a suggested category and the user changed it, log it for future learning
+    // If there was a suggested category and the user changed it, log it for
+    // future learning. This is best-effort telemetry on an already-committed
+    // transaction — a failure here must not turn into a 500 for the caller,
+    // since the transaction was already created and a retry would duplicate it.
     const suggested_category_id = req.body.suggested_category_id;
     if (suggested_category_id && suggested_category_id !== category_id) {
-      await db.query(
-        `INSERT INTO category_corrections (transaction_id, suggested_category_id, corrected_category_id)
-         VALUES ($1, $2, $3)`,
-        [transaction.id, suggested_category_id, category_id || null]
-      );
+      try {
+        await db.query(
+          `INSERT INTO category_corrections (transaction_id, suggested_category_id, corrected_category_id)
+           VALUES ($1, $2, $3)`,
+          [transaction.id, suggested_category_id, category_id || null]
+        );
+      } catch (correctionErr) {
+        console.error('Failed to log category correction (non-fatal):', correctionErr);
+      }
     }
 
     res.status(201).json(transaction);
@@ -65,7 +73,7 @@ router.get('/', async (req, res) => {
   try {
     const { month } = req.query;
 
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    if (!month || !MONTH_FORMAT.test(month)) {
       return res.status(400).json({
         error: 'month query param required in YYYY-MM format',
       });
@@ -75,9 +83,11 @@ router.get('/', async (req, res) => {
       `SELECT t.*, c.name AS category_name, c.icon AS category_icon, c.color AS category_color
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.id
-       WHERE to_char(t.txn_date, 'YYYY-MM') = $1 AND t.user_id = $2
+       WHERE t.user_id = $2
+         AND t.txn_date >= $1::date
+         AND t.txn_date < ($1::date + INTERVAL '1 month')
        ORDER BY t.txn_date DESC, t.created_at DESC`,
-      [month, req.user.id]
+      [monthStart(month), req.user.id]
     );
 
     // Postgres numeric types are returned as strings by node-postgres.
