@@ -4,6 +4,7 @@ import '../models/transaction.dart';
 import '../models/summary.dart';
 import '../models/income.dart';
 import '../models/savings_goal.dart';
+import '../utils/currency.dart';
 import 'auth_service.dart';
 
 /// API client service wrapping all REST calls to the ExpenseLens backend.
@@ -102,11 +103,20 @@ class ApiClient {
 
   Future<Map<String, dynamic>> getUser() async {
     final res = await _dio.get('/auth/me');
-    return res.data['user'] as Map<String, dynamic>;
+    final user = res.data['user'] as Map<String, dynamic>;
+    // Single choke point: every caller of /auth/me refreshes the display
+    // currency, so no screen has to remember to do it.
+    await Money.adopt(user['currency'] as String?);
+    return user;
   }
 
   Future<void> updateAutoSplit(bool val) async {
     await _dio.patch('/auth/me', data: {'auto_split_savings': val});
+  }
+
+  Future<void> updateCurrency(String code) async {
+    await _dio.patch('/auth/me', data: {'currency': code});
+    await Money.adopt(code);
   }
 
   // ---------------------------------------------------------------------------

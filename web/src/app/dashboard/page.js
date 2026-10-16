@@ -22,8 +22,10 @@ import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useCurrency } from '@/lib/currency';
 
 const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSuccess }) => {
+  const { symbol } = useCurrency();
   const [allocations, setAllocations] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -95,7 +97,7 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
           <div className="flex justify-between items-center bg-[#e0f2fe] text-[#0284c7] p-4 rounded-xl">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider opacity-80">Remaining to Allocate</p>
-              <p className="text-2xl font-extrabold">₹{remaining.toFixed(2)}</p>
+              <p className="text-2xl font-extrabold">{symbol}{remaining.toFixed(2)}</p>
             </div>
             <button type="button" onClick={handleAutoSplit} className="bg-white text-[#0284c7] px-4 py-2 rounded-lg font-bold shadow-sm hover:shadow-md transition-shadow text-sm flex items-center gap-2">
               <HugeiconsIcon icon={ArrowLeftRightIcon} size={16} color="#0284c7" strokeWidth={1.75} /> Auto-Split Equally
@@ -109,10 +111,10 @@ const DistributeSavingsModal = ({ isOpen, onClose, netBalance, savings, onSucces
                 <div key={goal.id} className="flex justify-between items-center gap-4">
                   <div className="flex-1 truncate">
                     <p className="font-bold text-foreground text-sm truncate">{goal.icon || '🎯'} {goal.name}</p>
-                    <p className="text-xs text-text-muted">₹{goal.current_amount} / ₹{goal.target_amount}</p>
+                    <p className="text-xs text-text-muted">{symbol}{goal.current_amount} / {symbol}{goal.target_amount}</p>
                   </div>
                   <div className="relative w-1/3">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold text-sm">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold text-sm">{symbol}</span>
                     <input type="number" step="0.01" min="0" max={netBalance} className="w-full pl-7 pr-3 py-2 rounded-lg border border-border focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] outline-none transition-all font-semibold text-sm" value={allocations[goal.id] || ''} onChange={e => setAllocations({...allocations, [goal.id]: e.target.value})} placeholder="0.00" />
                   </div>
                 </div>
@@ -164,7 +166,8 @@ export default function DashboardOverview() {
     setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
-  const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+  const { symbol, format } = useCurrency();
+  const formatCurrency = (amount) => format(amount, 0);
   const monthName = new Date(`${currentMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
 
   // Custom Tooltip for the Pie Chart

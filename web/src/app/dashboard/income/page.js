@@ -20,8 +20,10 @@ import {
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
+import { useCurrency } from '@/lib/currency';
 
 const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
+  const { symbol } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -92,7 +94,7 @@ const AddIncomeModal = ({ isOpen, onClose, onSuccess }) => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold">Amount <span className="text-[#e00]">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                   <input type="number" step="0.01" min="0" required autoFocus
                     className="w-full pl-8 pr-4 py-2 rounded-lg border border-border focus:border-[#2e7d32] focus:ring-1 focus:ring-[#2e7d32] outline-none transition-all font-semibold"
                     value={amount} onChange={e => setAmount(e.target.value)}
@@ -169,7 +171,7 @@ export default function IncomePage() {
     setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
-  const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+  const { symbol, format: formatCurrency } = useCurrency();
   const monthName = new Date(`${currentMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const totalIncome = incomes ? incomes.reduce((acc, curr) => acc + curr.amount, 0) : 0;

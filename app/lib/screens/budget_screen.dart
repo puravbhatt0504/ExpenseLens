@@ -5,6 +5,7 @@ import '../models/summary.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_icon.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../utils/currency.dart';
 class BudgetScreen extends ConsumerStatefulWidget {
   const BudgetScreen({super.key});
 
@@ -306,7 +307,7 @@ class _InteractiveBudgetBar extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              '₹',
+              Money.symbol,
               style: theme.textTheme.titleLarge?.copyWith(
                 color: accentColor,
                 fontWeight: FontWeight.w700,

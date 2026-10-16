@@ -14,8 +14,10 @@ import {
 } from '@hugeicons/core-free-icons';
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
+import { useCurrency } from '@/lib/currency';
 
 export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
+  const { symbol } = useCurrency();
   const { data: categories } = useSWR('/categories', fetcher);
   
   const [loading, setLoading] = useState(false);
@@ -112,7 +114,7 @@ export default function AddTransactionModal({ isOpen, onClose, onSuccess }) {
                   <HugeiconsIcon icon={CreditCardIcon} size={14} color="currentColor" strokeWidth={1.75} className="text-text-muted" /> Amount <span className="text-[#e00]">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                   <input 
                     type="number" 
                     step="0.01"

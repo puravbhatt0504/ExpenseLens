@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../providers/providers.dart';
 import '../models/transaction.dart';
 import '../widgets/category_icon.dart';
+import '../utils/currency.dart';
 
 /// Review Draft screen — pre-filled, editable form from parsed screenshot data.
 class ReviewDraftScreen extends ConsumerStatefulWidget {
@@ -216,11 +217,11 @@ class _ReviewDraftScreenState extends ConsumerState<ReviewDraftScreen> {
               // Amount field
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixText: '₹ ',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  prefixText: '${Money.symbol} ',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.payments_outlined),
                 ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),

@@ -6,6 +6,7 @@ import '../models/transaction.dart';
 import '../models/category.dart';
 import '../theme/app_theme.dart';
 import 'category_icon.dart';
+import '../utils/currency.dart';
 
 class TransactionCard extends StatelessWidget {
   final Transaction transaction;
@@ -22,7 +23,6 @@ class TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amountColor = AppTheme.textPrimary;
-    final currencyFormatter = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
     final isCategorized = category != null;
     final iconColor = isCategorized ? _parseColor(category!.color) : Colors.grey;
 
@@ -102,7 +102,7 @@ class TransactionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      currencyFormatter.format(transaction.amount),
+                      Money.format(transaction.amount, 0),
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

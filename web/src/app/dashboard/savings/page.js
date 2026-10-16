@@ -17,8 +17,10 @@ import {
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import SmoothScroll from '@/components/SmoothScroll';
+import { useCurrency } from '@/lib/currency';
 
 const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
+  const { symbol } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -95,7 +97,7 @@ const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-semibold">Target Amount <span className="text-[#e00]">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                   <input type="number" step="0.01" min="0" required
                     className="w-full pl-8 pr-4 py-2 rounded-lg border border-border focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] outline-none transition-all font-semibold"
                     value={targetAmount} onChange={e => setTargetAmount(e.target.value)}
@@ -125,6 +127,7 @@ const AddGoalModal = ({ isOpen, onClose, onSuccess }) => {
 };
 
 const AddFundsModal = ({ isOpen, onClose, goal, onSuccess }) => {
+  const { symbol } = useCurrency();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
 
@@ -166,7 +169,7 @@ const AddFundsModal = ({ isOpen, onClose, goal, onSuccess }) => {
             </div>
             <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                 <input type="number" step="0.01" min="0" required autoFocus
                   className="w-full pl-8 pr-4 py-2 rounded-lg border border-border focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] outline-none transition-all font-semibold"
                   value={amount} onChange={e => setAmount(e.target.value)}
@@ -210,7 +213,7 @@ export default function SavingsPage() {
     }
   };
 
-  const formatCurrency = (amount) => `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const { symbol, format: formatCurrency } = useCurrency();
 
   return (
     <>

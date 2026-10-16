@@ -12,8 +12,10 @@ import {
 import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useCurrency } from '@/lib/currency';
 
 export default function BudgetsPage() {
+  const { symbol } = useCurrency();
   const [budgets, setBudgets] = useState({});
   const [totalBudget, setTotalBudget] = useState('');
   const { data: categories, error: catsError, isLoading: catsLoading } = useSWR('/categories?v=3', fetcher);
@@ -134,7 +136,7 @@ export default function BudgetsPage() {
                   <label className="block text-sm font-semibold text-foreground mb-1">Monthly Total Budget</label>
                   <p className="text-xs text-text-muted mb-3 font-medium">Your overarching limit for the entire month.</p>
                   <div className="relative max-w-[300px]">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                     <input 
                       type="number" 
                       className="w-full pl-8 pr-4 py-2 rounded-lg border border-border focus:border-black focus:ring-1 focus:ring-black outline-none transition-all font-semibold"
@@ -171,7 +173,7 @@ export default function BudgetsPage() {
                             {cat.name}
                           </label>
                           <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">₹</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted font-bold">{symbol}</span>
                             <input 
                               type="number" 
                               className="w-full pl-8 pr-4 py-2 rounded-lg border border-border focus:border-black focus:ring-1 focus:ring-black outline-none transition-all font-semibold text-sm"

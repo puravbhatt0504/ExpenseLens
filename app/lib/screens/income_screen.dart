@@ -6,6 +6,7 @@ import '../providers/providers.dart';
 import '../models/income.dart';
 import '../theme/app_theme.dart';
 import '../widgets/month_switcher.dart';
+import '../utils/currency.dart';
 
 class IncomeScreen extends ConsumerStatefulWidget {
   const IncomeScreen({super.key});
@@ -54,11 +55,11 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _amountController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Amount',
-                    prefixText: '₹ ',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.currency_rupee),
+                    prefixText: '${Money.symbol} ',
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.payments_outlined),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   validator: (val) => (val == null || double.tryParse(val) == null) ? 'Invalid amount' : null,
@@ -230,7 +231,7 @@ class IncomeScreenState extends ConsumerState<IncomeScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  '+₹${income.amount.toStringAsFixed(0)}',
+                                  '+${Money.format(income.amount, 0)}',
                                   style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 IconButton(

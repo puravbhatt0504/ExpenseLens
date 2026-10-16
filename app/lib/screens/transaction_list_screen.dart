@@ -7,6 +7,7 @@ import '../models/transaction.dart';
 import '../providers/providers.dart';
 import '../widgets/month_switcher.dart';
 import '../widgets/category_icon.dart';
+import '../utils/currency.dart';
 
 /// Transaction List screen — shows transactions grouped by date for the selected month.
 class TransactionListScreen extends ConsumerStatefulWidget {
@@ -151,7 +152,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        '₹${dayTotal.toStringAsFixed(0)}',
+                                        '${Money.format(dayTotal, 0)}',
                                         style: theme.textTheme.titleSmall?.copyWith(
                                           fontWeight: FontWeight.w800,
                                           color: theme.colorScheme.onSurfaceVariant,
@@ -349,7 +350,7 @@ class _TransactionTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '₹${transaction.amount.toStringAsFixed(0)}',
+              '${Money.format(transaction.amount, 0)}',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
               ),

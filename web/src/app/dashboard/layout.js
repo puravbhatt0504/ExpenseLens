@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { SWRConfig } from 'swr';
+import { SWRConfig, useSWRConfig } from 'swr';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   DashboardSquare01Icon,
@@ -15,6 +15,34 @@ import {
 } from '@hugeicons/core-free-icons';
 import AuthGuard from '@/components/AuthGuard';
 import { logout, hardLogout } from '@/lib/auth';
+import api from '@/lib/api';
+import { useCurrency, CURRENCIES } from '@/lib/currency';
+
+function CurrencyPicker() {
+  const { code } = useCurrency();
+  const { mutate } = useSWRConfig();
+
+  const change = async (e) => {
+    await api.patch('/auth/me', { currency: e.target.value });
+    mutate('/auth/me'); // every useCurrency() consumer re-renders off this one key
+  };
+
+  return (
+    <label className="mt-auto flex items-center gap-3 p-3 text-sm font-medium text-text-muted">
+      <HugeiconsIcon icon={Money02Icon} size={18} color="currentColor" strokeWidth={1.75} />
+      <span className="sr-only">Currency</span>
+      <select
+        value={code}
+        onChange={change}
+        className="flex-1 bg-transparent cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded"
+      >
+        {Object.entries(CURRENCIES).map(([c, { symbol }]) => (
+          <option key={c} value={c}>{`${symbol} ${c}`}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 function DashboardChrome({ children }) {
   const pathname = usePathname();
@@ -61,8 +89,10 @@ function DashboardChrome({ children }) {
           })}
         </nav>
 
-        <button 
-          className="flex items-center gap-3 p-3 rounded-lg text-sm font-medium cursor-pointer text-text-muted hover:bg-surface hover:text-foreground transition-all mt-auto" 
+        <CurrencyPicker />
+
+        <button
+          className="flex items-center gap-3 p-3 rounded-lg text-sm font-medium cursor-pointer text-text-muted hover:bg-surface hover:text-foreground transition-all"
           onClick={handleLogout}
         >
           <HugeiconsIcon icon={Logout01Icon} size={18} color="currentColor" strokeWidth={1.75} /> Sign Out

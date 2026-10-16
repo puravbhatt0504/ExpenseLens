@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../models/transaction.dart';
 import '../widgets/category_icon.dart';
+import '../utils/currency.dart';
 
 /// Add Transaction screen — manual expense entry form.
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -155,11 +156,11 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
               // Amount field
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Amount',
-                  prefixText: '₹ ',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.currency_rupee),
+                  prefixText: '${Money.symbol} ',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.payments_outlined),
                 ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),

@@ -17,6 +17,7 @@ import useSWR from 'swr';
 import api, { fetcher } from '@/lib/api';
 import AddTransactionModal from '@/components/AddTransactionModal';
 import SmoothScroll from '@/components/SmoothScroll';
+import { useCurrency } from '@/lib/currency';
 
 export default function TransactionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function TransactionsPage() {
     setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   };
 
-  const formatCurrency = (amount) => `₹${Number(amount).toFixed(2)}`;
+  const { format: formatCurrency } = useCurrency();
   const monthName = new Date(`${currentMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
 
   const handleDelete = async (id) => {

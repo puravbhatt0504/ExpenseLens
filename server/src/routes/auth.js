@@ -7,6 +7,11 @@ const { issueSession, refreshSession, revokeRefreshToken, revokeAllForUser } = r
 const router = Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// Display currency only — amounts are stored as plain numbers and never
+// converted. Whitelisted because this value reaches a SQL column and the
+// clients' formatters.
+const SUPPORTED_CURRENCIES = ['INR', 'PHP'];
+
 // POST /api/auth/login
 // Receives a Google ID token, verifies it (once), upserts the user, and
 // issues our own access + refresh token pair. The Google token itself is
@@ -116,21 +121,33 @@ router.get('/me', requireAuth, async (req, res) => {
 // PATCH /api/auth/me
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { auto_split_savings } = req.body;
-    let query = 'UPDATE users SET ';
+    const { auto_split_savings, currency } = req.body;
+    const sets = [];
     const params = [];
-    let idx = 1;
 
     if (auto_split_savings !== undefined) {
-      query += `auto_split_savings = $${idx++} `;
+      sets.push(`auto_split_savings = $${params.length + 1}`);
       params.push(auto_split_savings);
     }
 
-    if (params.length === 0) {
+    if (currency !== undefined) {
+      if (!SUPPORTED_CURRENCIES.includes(currency)) {
+        return res.status(400).json({
+          error: `Unsupported currency. Expected one of: ${SUPPORTED_CURRENCIES.join(', ')}`,
+        });
+      }
+      sets.push(`currency = $${params.length + 1}`);
+      params.push(currency);
+    }
+
+    if (sets.length === 0) {
       return res.status(400).json({ error: 'No valid fields provided' });
     }
 
-    query += `WHERE id = $${idx} RETURNING *`;
+    // Joined, not concatenated — the previous version appended each
+    // assignment with a trailing space and no comma, so any second field
+    // would have produced `SET a = $1 b = $2` and thrown a syntax error.
+    const query = `UPDATE users SET ${sets.join(', ')} WHERE id = $${params.length + 1} RETURNING *`;
     params.push(req.user.id);
 
     const { rows } = await db.query(query, params);

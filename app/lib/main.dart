@@ -13,6 +13,7 @@ import 'screens/income_screen.dart';
 import 'screens/savings_screen.dart';
 import 'theme/app_theme.dart';
 import 'navigation.dart';
+import 'utils/currency.dart';
 import 'services/auth_service.dart';
 
 import 'screens/budget_screen.dart';
@@ -35,6 +36,8 @@ void main() async {
     systemNavigationBarIconBrightness: Brightness.dark,
     systemNavigationBarContrastEnforced: false,
   ));
+
+  await Money.restore();
 
   runApp(const ProviderScope(child: ExpenseLensApp()));
 }

@@ -76,6 +76,10 @@ router.get('/', async (req, res) => {
     ]);
     const total = parseFloat(summaryRows[0].total);
 
+    // PDFKit's built-in Helvetica has no glyph for ₹ or ₱, so the PDF uses
+    // the ASCII code rather than the symbol the apps show.
+    const cur = req.user.currency === 'PHP' ? 'PHP' : 'Rs.';
+
     // 4. Initialize PDF Document
     const doc = new PDFDocument({ margin: 0, size: 'A4' });
 
@@ -97,7 +101,7 @@ router.get('/', async (req, res) => {
     // Total Spend Card
     doc.roundedRect(380, 30, 175, 90, 10).fill('#FFFFFF');
     doc.fillColor(textSecondary).font('Helvetica').fontSize(12).text('Total Spend', 390, 45);
-    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(22).text(`Rs. ${total.toFixed(0)}`, 390, 70);
+    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(22).text(`${cur} ${total.toFixed(0)}`, 390, 70);
     doc.fillColor(textSecondary).font('Helvetica').fontSize(10).text(`${summaryRows[0].count} transactions`, 390, 100);
 
     doc.x = 40;
@@ -133,7 +137,7 @@ router.get('/', async (req, res) => {
       const legendY = doc.y;
       
       const categoryTable = {
-        headers: ['Category', 'Amount (Rs.)', '% of Total'],
+        headers: ['Category', `Amount (${cur})`, '% of Total'],
         rows: categoryRows.map(row => {
           const amt = parseFloat(row.amount);
           const percent = ((amt / total) * 100).toFixed(1);
@@ -171,7 +175,7 @@ router.get('/', async (req, res) => {
       doc.moveDown(0.5);
       
       const transactionsTable = {
-        headers: ['Date', 'Merchant / Note', 'Category', 'Amount (Rs.)'],
+        headers: ['Date', 'Merchant / Note', 'Category', `Amount (${cur})`],
         rows: transactionRows.map(t => {
           const dateStr = t.txn_date instanceof Date ? t.txn_date.toISOString().split('T')[0] : t.txn_date;
           let desc = t.merchant || '';

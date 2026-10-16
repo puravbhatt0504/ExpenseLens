@@ -9,6 +9,7 @@ import '../widgets/category_icon.dart';
 import '../theme/app_theme.dart';
 import '../models/savings_goal.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../utils/currency.dart';
 /// Dashboard screen — displays monthly spend, income, and category breakdown chart.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -110,7 +111,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Remaining:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('₹${remaining.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          Text('${Money.format(remaining, 2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                         ],
                       ),
                     ),
@@ -144,8 +145,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   child: TextField(
                                     controller: controllers[g.id!],
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                    decoration: const InputDecoration(
-                                      prefixText: '₹',
+                                    decoration: InputDecoration(
+                                      prefixText: Money.symbol,
                                       isDense: true,
                                     ),
                                     onChanged: (_) => setState(() {}),
@@ -234,6 +235,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         title: const Text('ExpenseLens'),
         centerTitle: true,
         actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Currency',
+            icon: Text(
+              Money.symbol,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            initialValue: Money.code,
+            onSelected: (code) async {
+              final previous = Money.code;
+              setState(() => Money.setCode(code));
+              try {
+                await ref.read(apiClientProvider).updateCurrency(code);
+                // Amounts are formatted at build time, so everything that
+                // shows money has to rebuild, not just this screen.
+                ref.invalidate(summaryProvider);
+                ref.invalidate(transactionsProvider);
+              } catch (_) {
+                if (mounted) setState(() => Money.setCode(previous));
+              }
+            },
+            itemBuilder: (_) => [
+              for (final entry in Money.currencies.entries)
+                PopupMenuItem(
+                  value: entry.key,
+                  child: Text('${entry.value.$1}  ${entry.key}'),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.account_balance_wallet_outlined),
             tooltip: 'Set Budget',
@@ -297,7 +326,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             Expanded(
                               child: _buildMetricCard(
                                 title: 'Net Balance',
-                                amount: '₹${netBalance.abs().toStringAsFixed(0)}',
+                                amount: '${Money.format(netBalance.abs(), 0)}',
                                 prefix: isPositive ? '+' : '-',
                                 color: isPositive ? Colors.green : Colors.red,
                                 icon: Icons.scale_rounded,
@@ -307,7 +336,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             Expanded(
                               child: _buildMetricCard(
                                 title: 'Income',
-                                amount: '₹${summary.totalIncome.toStringAsFixed(0)}',
+                                amount: '${Money.format(summary.totalIncome, 0)}',
                                 color: Colors.green,
                                 icon: Icons.trending_up,
                               ).animate().fade(duration: 500.ms, delay: 100.ms).slideY(begin: 0.2, end: 0),
@@ -321,7 +350,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             Expanded(
                               child: _buildMetricCard(
                                 title: 'Spend',
-                                amount: '₹${summary.total.toStringAsFixed(0)}',
+                                amount: '${Money.format(summary.total, 0)}',
                                 color: Colors.red,
                                 icon: Icons.trending_down,
                                 budgetInfo: summary.totalBudget != null ? {
@@ -587,7 +616,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               ),
                                             ),
                                             Text(
-                                              '₹${summary.total.toStringAsFixed(0)}',
+                                              '${Money.format(summary.total, 0)}',
                                               style: theme.textTheme.headlineSmall?.copyWith(
                                                 fontWeight: FontWeight.w800,
                                               ),
@@ -645,7 +674,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
                                                     Text(
-                                                      'Budget: ₹${cat.budget!.toStringAsFixed(0)}',
+                                                      'Budget: ${Money.format(cat.budget!, 0)}',
                                                       style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
                                                     ),
                                                     Text(
@@ -674,7 +703,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '₹${cat.amount.toStringAsFixed(0)}',
+                                          '${Money.format(cat.amount, 0)}',
                                           style: theme.textTheme.titleMedium?.copyWith(
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -800,7 +829,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Budget: ₹${budgetInfo['total']!.toStringAsFixed(0)}',
+                  'Budget: ${Money.format(budgetInfo['total']!, 0)}',
                   style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
                 ),
                 Text(

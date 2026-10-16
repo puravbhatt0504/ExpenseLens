@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../providers/providers.dart';
 import '../models/savings_goal.dart';
 import '../theme/app_theme.dart';
+import '../utils/currency.dart';
 
 class SavingsScreen extends ConsumerStatefulWidget {
   const SavingsScreen({super.key});
@@ -56,7 +57,7 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Target Amount', border: OutlineInputBorder(), prefixText: '₹ '),
+                decoration: InputDecoration(labelText: 'Target Amount', border: const OutlineInputBorder(), prefixText: '${Money.symbol} '),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (val) => (val == null || double.tryParse(val) == null) ? 'Invalid amount' : null,
               ),
@@ -226,7 +227,7 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text('Remaining:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('₹${remaining.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          Text('${Money.format(remaining, 2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                         ],
                       ),
                     ),
@@ -260,8 +261,8 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                                   child: TextField(
                                     controller: controllers[g.id!],
                                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                    decoration: const InputDecoration(
-                                      prefixText: '₹',
+                                    decoration: InputDecoration(
+                                      prefixText: Money.symbol,
                                       isDense: true,
                                     ),
                                     onChanged: (_) => setState(() {}),
@@ -373,7 +374,7 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                           Row(
                             children: [
                               Text(
-                                '₹${netSavings.toStringAsFixed(0)}',
+                                '${Money.format(netSavings, 0)}',
                                 style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                               ),
                               const Spacer(),
@@ -488,7 +489,7 @@ class SavingsScreenState extends ConsumerState<SavingsScreen> {
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text('₹${goal.currentAmount.toStringAsFixed(0)} / ₹${goal.targetAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text('${Money.format(goal.currentAmount, 0)} / ${Money.format(goal.targetAmount, 0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                                   IconButton(
                                     icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error, size: 20),
                                     onPressed: () async {
